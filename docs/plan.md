@@ -56,3 +56,13 @@ MVP 적재 범위는 서울 주요 노선 약 300역 × 후보지 30곳 = 9,000�
 | 2 | `feat/room-api` | 방 생성·조회, 추측 불가 방 코드, TTL | FR-01·02·06 |
 | 2 | `feat/participant-join` | 입장·별명 중복 거부·참여자 토큰 | FR-03 |
 | 2 | `feat/room-state-machine` | 단일 진입점 전이, 허용 목록, `roomRev` | 금지 전이 409 + 현재 상태 |
+
+| 주차 | 브랜치 | 내용 | 완료 기준 |
+|---|---|---|---|
+| 3 | `feat/sse-broadcast` | 방 단위 구독·이벤트 발행 | 1초 이내 전원 전달 |
+| 3 | `feat/sse-reconnect` | 마지막 이벤트 ID 재전송, 최근 이벤트 보관 | 단절 후 상태 일치 |
+| 3 | `feat/polling-fallback` | SSE 실패 시 폴링 강등 | 차단 환경 동작 |
+| 4 | `feat/origin-input` | 출발지 유형·지오코딩·좌표 즉시 폐기 | 원본 좌표 미저장 |
+| 4 | `feat/nearest-station` | PostGIS 최근접 역 매핑 | FR-09 |
+| 4 | `feat/candidate-ranking` | 공정·효율 정렬, 동률 테마 가중치, 경계 조건 | 두 기준 1위가 갈리는 사례 재현 |
+| 4 | `feat/matrix-api` | 후보 × 참여자 매트릭스, 최장·평균·편차 | FR-11·12 |
