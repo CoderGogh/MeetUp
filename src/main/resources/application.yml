@@ -24,3 +24,8 @@ management:
     health:
       probes:
         enabled: true
+meetup:
+  room:
+    ttl: ${ROOM_TTL:PT6H}
+    confirmed-ttl: ${ROOM_CONFIRMED_TTL:PT24H}
+    max-participants: 10
