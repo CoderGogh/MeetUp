@@ -5,3 +5,10 @@
 
 # RFP 원문 (비공개)
 *RFP*.md
+
+# Java · Gradle
+.gradle/
+build/
+out/
+*.class
+!gradle/wrapper/gradle-wrapper.jar
