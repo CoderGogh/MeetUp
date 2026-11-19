@@ -1,0 +1,7 @@
+# 환경변수·비밀값 (.env.example 은 추적)
+.env
+.env.*
+!.env.example
+
+# RFP 원문 (비공개)
+*RFP*.md
