@@ -45,3 +45,14 @@ services:
       postgis: { condition: service_healthy }
       redis: { condition: service_healthy }
     restart: unless-stopped
+  app2:
+    image: meetup-app
+    profiles: ["scale"]
+    env_file:
+      - path: .env
+        required: false
+    environment: *app-env
+    ports: ["${APP2_PORT:-8081}:8080"]
+    depends_on:
+      app: { condition: service_healthy }
+    restart: unless-stopped
