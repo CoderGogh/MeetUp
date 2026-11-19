@@ -28,4 +28,11 @@ class MigrationTest {
                 "SELECT indexdef FROM pg_indexes WHERE indexname = 'idx_station_geom'", String.class);
         assertThat(def).containsIgnoringCase("gist");
     }
+
+    @Test
+    void travelTimeRejectsNegativeMinutes() {
+        String sql = "SELECT pg_get_constraintdef(oid) FROM pg_constraint "
+                + "WHERE conrelid = 'travel_time'::regclass AND contype = 'c'";
+        assertThat(jdbc.queryForList(sql, String.class)).anyMatch(d -> d.contains("minutes >= 0"));
+    }
 }
