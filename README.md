@@ -11,3 +11,14 @@
 - [서비스 컨셉](docs/concept.md)
 - [기초 기획안](docs/plan.md)
 - [형상 관리 규칙](CONTRIBUTING.md)
+## 실행
+
+```bash
+cp .env.example .env          # 키 입력 (없어도 기동은 됨)
+docker compose up -d --build  # PostGIS · Redis · 앱
+curl localhost:8080/actuator/health
+```
+
+- 두 번째 인스턴스까지 띄우기: `docker compose --profile scale up -d`
+- 종료: `docker compose down` (데이터 볼륨 유지, `-v` 붙이면 삭제)
+- 로컬 개발: PostGIS·Redis만 compose로 띄우고 `./gradlew bootRun`
