@@ -12,3 +12,18 @@ build/
 out/
 *.class
 !gradle/wrapper/gradle-wrapper.jar
+
+# 프론트
+node_modules/
+dist/
+.vite/
+
+# 적재 진행 로그·원본 응답
+loader/state/
+loader/raw/
+
+# IDE · OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
