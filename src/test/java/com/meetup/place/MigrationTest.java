@@ -21,4 +21,11 @@ class MigrationTest {
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'", String.class);
         assertThat(tables).contains("station", "candidate", "travel_time", "load_progress");
     }
+
+    @Test
+    void stationHasSpatialIndex() {
+        String def = jdbc.queryForObject(
+                "SELECT indexdef FROM pg_indexes WHERE indexname = 'idx_station_geom'", String.class);
+        assertThat(def).containsIgnoringCase("gist");
+    }
 }
