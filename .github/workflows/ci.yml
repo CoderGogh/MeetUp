@@ -10,3 +10,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: meetup
+          POSTGRES_PASSWORD: meetup
+          POSTGRES_DB: meetup_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U meetup"
+          --health-interval 5s --health-timeout 5s --health-retries 12
