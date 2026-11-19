@@ -41,3 +41,18 @@
 | Phase 3 | 수도권 확대 · 지도 시각 효과 · 캘린더 등록 |
 
 MVP 적재 범위는 서울 주요 노선 약 300역 × 후보지 30곳 = 9,000조합 (약 9일).
+
+## 주차별 작업 · 브랜치
+
+브랜치 하나 = PR 하나 = 기능 하나.
+
+| 주차 | 브랜치 | 내용 | 완료 기준 |
+|---|---|---|---|
+| 1 | `build/project-setup` | Gradle·Spring Boot 골격, compose(PostGIS·Redis) | 로컬 기동 |
+| 1 | `ci/github-actions` | 빌드·테스트 필수 체크 | PR에서 CI 통과 |
+| 1 | `feat/station-schema` | 역·후보지·이동시간 테이블, 공간 인덱스 | 마이그레이션 적용 |
+| 1 | `feat/candidate-curation` | 후보지 30곳 선정 기준·메타데이터 | 선정 근거 문서 |
+| 1 | `feat/travel-time-loader` | 적재 스크립트, 진행 기록·실패 재시도 | 중단 후 이어서 적재 |
+| 2 | `feat/room-api` | 방 생성·조회, 추측 불가 방 코드, TTL | FR-01·02·06 |
+| 2 | `feat/participant-join` | 입장·별명 중복 거부·참여자 토큰 | FR-03 |
+| 2 | `feat/room-state-machine` | 단일 진입점 전이, 허용 목록, `roomRev` | 금지 전이 409 + 현재 상태 |
