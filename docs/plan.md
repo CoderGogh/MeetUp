@@ -66,3 +66,19 @@ MVP 적재 범위는 서울 주요 노선 약 300역 × 후보지 30곳 = 9,000�
 | 4 | `feat/nearest-station` | PostGIS 최근접 역 매핑 | FR-09 |
 | 4 | `feat/candidate-ranking` | 공정·효율 정렬, 동률 테마 가중치, 경계 조건 | 두 기준 1위가 갈리는 사례 재현 |
 | 4 | `feat/matrix-api` | 후보 × 참여자 매트릭스, 최장·평균·편차 | FR-11·12 |
+
+| 주차 | 브랜치 | 내용 | 완료 기준 |
+|---|---|---|---|
+| 5 | `test/vote-no-lock-baseline` | 락 없는 버전의 집계 유실 재현 | 실패 로그 확보 |
+| 5 | `feat/vote-redis-atomic` | A안: 표 회수·반영 원자 스크립트 | 오차 0건 |
+| 5 | `feat/vote-rdb-optimistic` | B안: 버전 컬럼·재시도 | 오차 0건 |
+| 5 | `feat/idempotency-key` | 요청 ID 선점, 이전 결과 반환 | 중복 전송 1회 반영 |
+| 5 | `test/vote-concurrency-bench` | 두 안 비교 (정합성·p95·재시도율) | 측정 로그 + 결론 문서 |
+| 5 | `feat/draw` | 서버 난수 추첨, 시드 기록·공개 | FR-16 |
+| 6 | `feat/web-room-flow` | 생성·입장·입력 화면 | 모바일 확인 |
+| 6 | `feat/web-matrix` | 결과 매트릭스·기준 전환 탭·투표 | 4.5.1 화면 정의 |
+| 6 | `feat/route-handoff` | 확정 화면·지도 앱 길안내 | FR-17~19 |
+| 6 | `docs/readme-results` | 문제 → 설계 결정 → 측정 결과 | 문서 완료 기준 |
+| 6 | `release/v0.1.0` | 데모 배포·태그 | 데모 시나리오 통과 |
+
+5주차가 결과물을 결정한다. 앞이 밀려도 5주차 분량은 줄이지 않는다.
