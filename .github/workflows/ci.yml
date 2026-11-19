@@ -47,3 +47,9 @@ jobs:
           name: test-report
           path: build/reports/tests/test
           retention-days: 7
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: compose 설정 검증
+        run: docker compose config -q
