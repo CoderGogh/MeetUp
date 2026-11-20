@@ -24,4 +24,9 @@ class TransferTimesTest {
     void expressAndLocalShareLine() {
         assertThat(transfers.walk("여의도", "9호선", "9호선급행")).isZero();
     }
+
+    @Test
+    void unknownTransferIsNull() {
+        assertThat(transfers.walk("없는역", "1호선", "2호선")).isNull();
+    }
 }
