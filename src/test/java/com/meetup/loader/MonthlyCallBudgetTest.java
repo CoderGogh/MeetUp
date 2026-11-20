@@ -32,4 +32,11 @@ class MonthlyCallBudgetTest extends LoaderDbTest {
         assertThat(b.used()).isEqualTo(2);
         assertThat(b.remaining()).isZero();
     }
+
+    @Test
+    void sharesLedgerAcrossInstances() {
+        budget(2, nov).acquire();
+        budget(2, nov).acquire();
+        assertThatThrownBy(budget(2, nov)::acquire).isInstanceOf(QuotaExceededException.class);
+    }
 }
