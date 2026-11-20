@@ -1,5 +1,6 @@
 package com.meetup.loader;
 
+import java.time.Duration;
 import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -39,5 +40,12 @@ public class LoadProgressRepository {
     public int remaining(int maxAttempts) {
         return jdbc.queryForObject("SELECT count(*) FROM load_progress WHERE " + UNFINISHED,
                 Integer.class, maxAttempts);
+    }
+
+    // 갱신일이 오래된 조합 재조회
+    public int requeueStale(Duration age) {
+        return jdbc.update("UPDATE load_progress p SET status = 'PENDING', attempts = 0, updated_at = now() "
+                + "FROM travel_time t WHERE t.station_id = p.station_id AND t.candidate_id = p.candidate_id "
+                + "AND t.updated_at < now() - make_interval(secs => ?)", age.toSeconds());
     }
 }
