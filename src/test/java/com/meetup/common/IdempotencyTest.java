@@ -4,11 +4,14 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -28,5 +31,15 @@ class IdempotencyTest {
             runs.incrementAndGet();
             return ResponseEntity.status(201).body(Map.of("run", runs.get()));
         });
+    }
+
+    @Test
+    void replaysFirstResultWithoutRerun() {
+        call("key-00001", "a");
+        ResponseEntity<Object> again = call("key-00001", "a");
+        assertThat(runs.get()).isEqualTo(1);
+        assertThat(again.getStatusCode().value()).isEqualTo(201);
+        assertThat(again.getHeaders().getFirst(Idempotency.REPLAYED)).isEqualTo("true");
+        assertThat(again.getBody().toString()).contains("\"run\":1");
     }
 }
