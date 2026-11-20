@@ -6,12 +6,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -52,5 +55,15 @@ class ParticipantJoinTest {
         }).toList());
         pool.shutdown();
         return ok.get();
+    }
+
+    @Test
+    void joinsAndAuthenticates() {
+        String code = RoomFixture.room(rooms, 5).code();
+        JoinedRoom me = join(code, "준호");
+        assertThat(me.roomRev()).isEqualTo(2);
+        RoomView view = rooms.view(code, me.participantToken());
+        assertThat(view.me()).isEqualTo(me.participantId());
+        assertThat(view.participants()).extracting(RoomView.Member::nickname).containsExactly("방장", "준호");
     }
 }
