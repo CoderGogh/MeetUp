@@ -65,4 +65,9 @@ class CandidateSeedTest {
     void talkAvoidsLargeArea() {
         assertThat(violating("'TALK' = ANY (c.theme_tags) AND c.area_type = 'LARGE'")).isEmpty();
     }
+
+    @Test
+    void meetingRequiresTransfer() {
+        assertThat(violating("'MEETING' = ANY (c.theme_tags) AND s.lines NOT LIKE '%,%'")).isEmpty();
+    }
 }
