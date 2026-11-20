@@ -43,4 +43,10 @@ class OdsayResponseTest {
                 {"error":[{"code":"500","message":"ApiKey authentication failed."}]}"""))
                 .isInstanceOf(RouteException.class).hasMessageContaining("500");
     }
+
+    @Test
+    void emptyPathThrows() {
+        assertThatThrownBy(() -> parse("""
+                {"result":{"path":[]}}""")).isInstanceOf(RouteException.class);
+    }
 }
