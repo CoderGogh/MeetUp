@@ -52,4 +52,11 @@ class ParticipantApiTest {
                 .andExpect(jsonPath("$.participantId").value(json.readTree(first).get("participantId").asText()));
         assertThat(redis.opsForHash().size(RoomKeys.participants(code))).isEqualTo(2);
     }
+
+    @Test
+    void duplicateNicknameIsConflict() throws Exception {
+        String code = RoomFixture.room(rooms, 5).code();
+        join(code, UUID.randomUUID().toString(), "방장").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("NICKNAME_TAKEN"));
+    }
 }
