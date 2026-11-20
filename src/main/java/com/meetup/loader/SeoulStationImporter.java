@@ -52,6 +52,10 @@ public class SeoulStationImporter {
     static Map<String, Set<String>> graphLines() {
         Map<String, Set<String>> lines = new HashMap<>();
         for (LineSegment s : SubwaySources.all()) {
+            // 급행은 같은 노선의 운행 계통이라 역 노선에서 뺌
+            if (s.line().endsWith("급행")) {
+                continue;
+            }
             lines.computeIfAbsent(s.from(), k -> new TreeSet<>()).add(s.line());
             lines.computeIfAbsent(s.to(), k -> new TreeSet<>()).add(s.line());
         }

@@ -36,8 +36,8 @@ class SubwaySourcesTest {
     @Test
     void readsExtraLinesWithoutTimes() {
         var extra = SubwaySources.extraLines();
-        // 114행 - 구간 시작 9행
-        assertThat(extra).hasSize(105).allMatch(s -> s.minutes() == null);
+        // 130행 - 구간 시작 10행
+        assertThat(extra).hasSize(120).allMatch(s -> s.minutes() == null);
         assertThat(linked(extra, "9호선", "여의도", "샛강")).isTrue();
         assertThat(linked(extra, "1호선", "구로", "가산디지털단지")).isTrue();
     }
