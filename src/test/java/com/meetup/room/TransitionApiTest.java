@@ -52,4 +52,13 @@ class TransitionApiTest {
                         .header("X-Participant-Token", room.participantToken()))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.details.currentState").value("COLLECTING"));
     }
+
+    @Test
+    void noTokenIsUnauthorized() throws Exception {
+        CreatedRoom room = RoomFixture.room(rooms, 5);
+        mvc.perform(fire(room.code(), UUID.randomUUID().toString(), "CALCULATE_CANDIDATES"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(fire(room.code(), UUID.randomUUID().toString(), "CALCULATE_CANDIDATES")
+                        .header("X-Host-Token", "wrong")).andExpect(status().isUnauthorized());
+    }
 }
