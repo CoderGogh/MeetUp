@@ -2,9 +2,12 @@ package com.meetup.subway;
 
 import com.meetup.place.Geo;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 /** 역 × 노선을 노드로, 승차 구간과 환승을 간선으로 둔 그래프 */
 public final class SubwayGraph {
@@ -60,6 +63,33 @@ public final class SubwayGraph {
                 }
             }
         }
+    }
+
+    /** 출발역 기준 최단 시간 (다익스트라) */
+    public Map<String, Path> shortestFrom(String station, double initialWait) {
+        double[] dist = new double[stationOf.size()];
+        int[] hops = new int[dist.length];
+        Arrays.fill(dist, Double.POSITIVE_INFINITY);
+        PriorityQueue<double[]> pq = new PriorityQueue<>(Comparator.comparingDouble(q -> q[0]));
+        for (int n : byStation.getOrDefault(station, List.of())) {
+            dist[n] = initialWait;
+            pq.add(new double[] {initialWait, n});
+        }
+        while (!pq.isEmpty()) {
+            double[] cur = pq.poll();
+            int u = (int) cur[1];
+            if (cur[0] > dist[u]) {
+                continue;
+            }
+            for (Edge e : adj.get(u)) {
+                if (dist[u] + e.minutes() < dist[e.to()]) {
+                    dist[e.to()] = dist[u] + e.minutes();
+                    hops[e.to()] = hops[u] + e.transfers();
+                    pq.add(new double[] {dist[e.to()], e.to()});
+                }
+            }
+        }
+        return best(station, dist, hops);
     }
 
     public boolean has(String station) {
