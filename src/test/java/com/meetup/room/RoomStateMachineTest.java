@@ -87,4 +87,13 @@ class RoomStateMachineTest {
         assertThat(e.details()).containsEntry("reason", "ORIGINS_MISSING");
         assertThat(e.details().get("missing").toString()).contains("방장", "준호");
     }
+
+    @Test
+    void calculatesWhenEveryoneSubmitted() throws Exception {
+        String code = room();
+        participants.join(code, new JoinRequest("준호"));
+        RoomFixture.submitOrigins(redis, json, code);
+        assertThat(machine.fire(code, RoomTrigger.CALCULATE_CANDIDATES, Actor.HOST).state())
+                .isEqualTo(RoomState.REVIEWING);
+    }
 }
