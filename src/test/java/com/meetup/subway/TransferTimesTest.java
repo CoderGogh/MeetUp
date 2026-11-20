@@ -19,4 +19,9 @@ class TransferTimesTest {
     void usesReverseDirectionWhenMissing() {
         assertThat(transfers.walk("강남", "신분당선", "2호선")).isCloseTo(2.97, within(0.01));
     }
+
+    @Test
+    void expressAndLocalShareLine() {
+        assertThat(transfers.walk("여의도", "9호선", "9호선급행")).isZero();
+    }
 }
