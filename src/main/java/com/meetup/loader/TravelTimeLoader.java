@@ -50,9 +50,16 @@ public class TravelTimeLoader {
     private void load(List<LoadKey> batch, Tally t) {
         List<LoadedRoute> ok = new ArrayList<>();
         for (LoadKey key : batch) {
-            Route route = client.find(t.stations.get(key.stationId()), t.candidates.get(key.candidateId()));
-            ok.add(new LoadedRoute(key, route));
-            if (route.source() == Route.Source.ODSAY) {
+            try {
+                Route route = client.find(t.stations.get(key.stationId()), t.candidates.get(key.candidateId()));
+                ok.add(new LoadedRoute(key, route));
+                if (route.source() == Route.Source.ODSAY) {
+                    t.calls++;
+                }
+            } catch (RouteException e) {
+                // 실패 조합은 기록만 하고 다음 조합 진행
+                progress.markFailed(key, e.getMessage());
+                t.failed++;
                 t.calls++;
             }
         }
