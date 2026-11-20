@@ -21,4 +21,11 @@ class CandidateSeedTest {
         Integer count = jdbc.queryForObject("SELECT count(*) FROM candidate", Integer.class);
         assertThat(count).isEqualTo(30);
     }
+
+    @Test
+    void everyRegionHasAtLeastFive() {
+        var counts = jdbc.queryForList(
+                "SELECT count(*) FROM candidate GROUP BY region", Integer.class);
+        assertThat(counts).hasSize(Region.values().length).allMatch(c -> c >= 5);
+    }
 }
