@@ -64,4 +64,11 @@ class RoomStateMachineTest {
         assertThat(failure(room(), RoomTrigger.PARTICIPANT_CHANGED, Actor.HOST).code())
                 .isEqualTo(ErrorCode.FORBIDDEN);
     }
+
+    @Test
+    void forbiddenTransitionReturnsCurrentState() {
+        ApiException e = failure(room(), RoomTrigger.START_VOTING, Actor.HOST);
+        assertThat(e.code()).isEqualTo(ErrorCode.INVALID_TRANSITION);
+        assertThat(e.details()).containsEntry("currentState", "COLLECTING").containsEntry("roomRev", 1L);
+    }
 }
