@@ -1,5 +1,6 @@
 package com.meetup.subway;
 
+import com.meetup.place.Geo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,33 @@ public final class SubwayGraph {
     private int skipped;
 
     private SubwayGraph() {
+    }
+
+    public static SubwayGraph build(List<LineSegment> segments, Map<String, double[]> coords,
+            TransferTimes transfers, GraphParams p) {
+        SubwayGraph g = new SubwayGraph();
+        for (LineSegment s : segments) {
+            Double ride = s.minutes() != null ? s.minutes() : estimate(s, coords, p);
+            if (ride == null) {
+                g.skipped++;
+                continue;
+            }
+            int a = g.node(s.from(), s.line());
+            int b = g.node(s.to(), s.line());
+            g.link(a, b, ride + p.dwellMinutes(), 0);
+            g.link(b, a, ride + p.dwellMinutes(), 0);
+        }
+        return g;
+    }
+
+    // 소요시간 없는 구간: 좌표 거리 × 우회 ÷ 속도. 좌표 없으면 null
+    private static Double estimate(LineSegment s, Map<String, double[]> coords, GraphParams p) {
+        double[] a = coords.get(s.from());
+        double[] b = coords.get(s.to());
+        if (a == null || b == null) {
+            return null;
+        }
+        return Geo.distanceKm(a[0], a[1], b[0], b[1]) * p.detour() / p.estimatedKmh() * 60;
     }
 
     public boolean has(String station) {
