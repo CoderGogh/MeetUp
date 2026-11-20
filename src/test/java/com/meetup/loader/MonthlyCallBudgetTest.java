@@ -47,4 +47,10 @@ class MonthlyCallBudgetTest extends LoaderDbTest {
         var dec = Clock.offset(nov, java.time.Duration.ofMinutes(30));
         assertThat(budget(1, dec).remaining()).isEqualTo(1);
     }
+
+    @Test
+    void zeroLimitNeverCalls() {
+        assertThatThrownBy(budget(0, nov)::acquire).isInstanceOf(QuotaExceededException.class);
+        assertThat(budget(0, nov).used()).isZero();
+    }
 }
