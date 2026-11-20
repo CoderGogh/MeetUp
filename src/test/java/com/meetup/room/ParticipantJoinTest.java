@@ -102,4 +102,11 @@ class ParticipantJoinTest {
         assertThatThrownBy(() -> join(code, "준호")).isInstanceOf(ApiException.class)
                 .extracting("details").asString().contains("VOTING");
     }
+
+    @Test
+    void rejectsExpiredRoom() {
+        String code = RoomFixture.room(rooms, 5).code();
+        RoomFixture.expire(redis, code);
+        assertThat(failure(() -> join(code, "준호"))).isEqualTo(ErrorCode.ROOM_EXPIRED);
+    }
 }
