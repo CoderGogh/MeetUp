@@ -30,4 +30,11 @@ class SeoulStationImporterTest extends LoaderDbTest {
         importer(new MasterStation("양재시민의숲(매헌)", "신분당선", 37.4704, 127.0384)).importStations();
         assertThat(lines("양재시민의숲")).isEqualTo("신분당선");
     }
+
+    @Test
+    void skipsLinesOutsideGraph() {
+        int n = importer(new MasterStation("솔샘", "우이신설선", 37.62, 127.01),
+                new MasterStation("신촌", "경의중앙선", 37.5598, 126.9426)).importStations();
+        assertThat(n).isZero();
+    }
 }
