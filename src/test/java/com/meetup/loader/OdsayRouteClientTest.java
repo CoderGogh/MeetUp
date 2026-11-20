@@ -3,6 +3,7 @@ package com.meetup.loader;
 import com.meetup.place.Station;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -14,6 +15,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class OdsayRouteClientTest {
@@ -52,5 +54,13 @@ class OdsayRouteClientTest {
         Route r = client.find(gangnam, at(1, 37.4979, 127.0276));
         assertThat(r.source()).isEqualTo(Route.Source.ESTIMATE);
         server.verify();
+    }
+
+    @Test
+    void http429IsQuotaExceeded() {
+        server.expect(requestTo(startsWith("https://api.odsay.com")))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
+        assertThatThrownBy(() -> client.find(gangnam, at(2, 37.5133, 127.1001)))
+                .isInstanceOf(QuotaExceededException.class);
     }
 }
