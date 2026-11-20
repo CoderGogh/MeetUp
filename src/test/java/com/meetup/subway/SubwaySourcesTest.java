@@ -41,4 +41,9 @@ class SubwaySourcesTest {
         assertThat(linked(extra, "9호선", "여의도", "샛강")).isTrue();
         assertThat(linked(extra, "1호선", "구로", "가산디지털단지")).isTrue();
     }
+
+    @Test
+    void parsesMinutes() {
+        assertThat(SubwaySources.minutes("01:30")).isEqualTo(1.5);
+    }
 }
