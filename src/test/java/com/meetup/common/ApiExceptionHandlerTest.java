@@ -63,4 +63,10 @@ class ApiExceptionHandlerTest {
         mvc.perform(get("/header")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.header").value("Idempotency-Key"));
     }
+
+    @Test
+    void unreadableBodyIsBadRequest() throws Exception {
+        mvc.perform(post("/validated").contentType(MediaType.APPLICATION_JSON).content("{"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
 }
