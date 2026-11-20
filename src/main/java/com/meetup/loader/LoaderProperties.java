@@ -15,10 +15,16 @@ public record LoaderProperties(
         Duration refreshOlderThan,
         String stationsCsv,
         String odsayKey,
-        String seoulKey) {
+        String seoulKey,
+        @DefaultValue("graph") String mode) {
 
     public boolean hasOdsayKey() {
         return odsayKey != null && !odsayKey.isBlank();
+    }
+
+    // graph: 지하철 그래프 계산, odsay: ODsay 호출 적재
+    public boolean graphMode() {
+        return !"odsay".equalsIgnoreCase(mode);
     }
 
     public boolean hasSeoulKey() {

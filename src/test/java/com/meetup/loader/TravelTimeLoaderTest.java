@@ -25,7 +25,7 @@ class TravelTimeLoaderTest extends LoaderDbTest {
     final FakeOdsay fake = new FakeOdsay();
 
     TravelTimeLoader loader(int dailyLimit) {
-        var props = new LoaderProperties(true, dailyLimit, 3, 20, Duration.ZERO, null, null, null, null);
+        var props = new LoaderProperties(true, dailyLimit, 3, 20, Duration.ZERO, null, null, null, null, "odsay");
         return new TravelTimeLoader(places, progress, writer, fake, props);
     }
 
