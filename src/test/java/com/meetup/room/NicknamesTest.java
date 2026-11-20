@@ -25,4 +25,9 @@ class NicknamesTest {
         assertThatThrownBy(() -> Nicknames.clean("민​지")).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> Nicknames.clean("민\n지")).isInstanceOf(ApiException.class);
     }
+
+    @Test
+    void duplicateKeyIgnoresCase() {
+        assertThat(Nicknames.key("Jun")).isEqualTo(Nicknames.key("jUN"));
+    }
 }
