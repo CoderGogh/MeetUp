@@ -52,4 +52,11 @@ class TravelTimeLoaderTest extends LoaderDbTest {
         assertThat(count("SELECT count(*) FROM travel_time")).isEqualTo(50);
         assertThat(r.remaining()).isEqualTo(pairs() - 50);
     }
+
+    @Test
+    void resumesWithoutRepeating() {
+        loader(50).run();
+        loader(50).run();
+        assertThat(fake.calls).hasSize(100).doesNotHaveDuplicates();
+    }
 }
