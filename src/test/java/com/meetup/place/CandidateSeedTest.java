@@ -60,4 +60,9 @@ class CandidateSeedTest {
     void indoorRequiresUnderground() {
         assertThat(violating("'INDOOR' = ANY (c.theme_tags) AND NOT c.underground")).isEmpty();
     }
+
+    @Test
+    void talkAvoidsLargeArea() {
+        assertThat(violating("'TALK' = ANY (c.theme_tags) AND c.area_type = 'LARGE'")).isEmpty();
+    }
 }
