@@ -22,6 +22,7 @@ set -a && . ./.env && set +a   # ODSAY_API_KEY 등
 | `ODSAY_API_KEY` | 없음 | odsay 방식에서 없으면 추정 모드 |
 | `STATIONS_CSV` | 없음 | 기준역 CSV 경로. 주면 행렬 적재 전에 먼저 넣음 |
 | `LOADER_DAILY_LIMIT` | 0 | 1회 실행당 ODsay 호출 상한. 0이면 호출 안 함. 무료 한도가 월 30건이라 검증할 때만 명시 |
+| `ODSAY_MONTHLY_LIMIT` | 30 | ODsay 월 호출 한도. DB 장부로 실행 간 합산 |
 
 그 밖에 `--meetup.loader.max-attempts=3`(실패 재시도), `batch-size=20`, `delay=200ms`(호출 간격), `refresh-older-than=180d`(오래된 행 재조회)를 인자로 바꿀 수 있다.
 
@@ -55,6 +56,21 @@ set -a && . ./.env && set +a   # ODSAY_API_KEY 등
 - ODsay는 버스 경로도 고른다. 지하철만 보는 그래프와 차이가 나는 원인 중 하나
 - 실행할 때마다 로그에 표본 수·평균·최대 오차를 찍는다. 다음 달 표본은 강남 밖 출발역으로 고른다
 - ODsay 원본 응답은 제공사 약관 확인 전이라 저장소에 올리지 않고 로컬(`loader/raw/`)에만 둔다
+
+## ODsay 한도 보호
+
+무료 한도가 월 30건이라 한 번만 잘못 돌려도 한 달 치가 사라진다 (2026-11-20에 실제로 소진). 세 겹으로 막는다.
+
+| 단계 | 장치 |
+|---|---|
+| 방식 | 기본이 그래프 계산. `LOADER_MODE=odsay`일 때만 ODsay 경로를 탄다 |
+| 실행 상한 | `LOADER_DAILY_LIMIT` 기본 0. 값을 줘야 부른다 |
+| 월 장부 | `api_call_budget`에 KST 월별 호출 수를 남기고, 요청을 보내기 전에 조건부 upsert로 1건씩 차감. `ODSAY_MONTHLY_LIMIT`(기본 30)에 닿으면 요청 자체를 안 보낸다 |
+
+- 장부는 DB에 있어서 `.env`를 바꾸거나 여러 번 실행해도 합산된다. 동시 실행에도 한도를 넘지 않는다
+- ODsay가 `429`를 주면 바로 멈추고 남은 조합은 실패로 세지 않는다
+- 실행 로그 첫 줄에 이번 달 남은 호출 수를 찍는다. 0이면 실행하지 않는다
+- 장부 도입 전에 쓴 호출은 직접 넣는다: `INSERT INTO api_call_budget VALUES ('ODSAY', '2026-11', 30);`
 
 ## ODsay 방식 동작
 
