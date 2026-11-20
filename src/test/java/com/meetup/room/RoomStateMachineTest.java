@@ -71,4 +71,11 @@ class RoomStateMachineTest {
         assertThat(e.code()).isEqualTo(ErrorCode.INVALID_TRANSITION);
         assertThat(e.details()).containsEntry("currentState", "COLLECTING").containsEntry("roomRev", 1L);
     }
+
+    @Test
+    void needsTwoParticipants() {
+        ApiException e = failure(room(), RoomTrigger.CALCULATE_CANDIDATES, Actor.HOST);
+        assertThat(e.code()).isEqualTo(ErrorCode.PRECONDITION_FAILED);
+        assertThat(e.details()).containsEntry("reason", "MIN_PARTICIPANTS");
+    }
 }
