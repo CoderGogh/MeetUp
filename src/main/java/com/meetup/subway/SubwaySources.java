@@ -41,6 +41,26 @@ public final class SubwaySources {
         return segments;
     }
 
+    /** 직접 정리한 노선 (노선·구간·역명, 연속 행이 한 구간) */
+    public static List<LineSegment> extraLines() {
+        List<LineSegment> segments = new ArrayList<>();
+        String[] prev = null;
+        for (String[] r : rows("extra_lines.csv")) {
+            if (prev != null && prev[0].equals(r[0]) && prev[1].equals(r[1])) {
+                segments.add(new LineSegment(r[0], StationNames.normalize(prev[2]),
+                        StationNames.normalize(r[2]), null));
+            }
+            prev = r;
+        }
+        return segments;
+    }
+
+    public static List<LineSegment> all() {
+        List<LineSegment> all = new ArrayList<>(seoulMetro());
+        all.addAll(extraLines());
+        return all;
+    }
+
     // 헤더 뺀 행
     static List<String[]> rows(String file) {
         try (var in = new ClassPathResource("subway/" + file).getInputStream()) {
