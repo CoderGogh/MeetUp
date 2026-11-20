@@ -105,4 +105,12 @@ class RoomStateMachineTest {
         RoomFixture.decideLeader(redis, code);
         assertThat(machine.fire(code, RoomTrigger.CONFIRM, Actor.HOST).state()).isEqualTo(RoomState.CONFIRMED);
     }
+
+    @Test
+    void expiredRoomRejectsEverything() {
+        String code = room();
+        RoomFixture.expire(redis, code);
+        assertThat(failure(code, RoomTrigger.CALCULATE_CANDIDATES, Actor.HOST).details())
+                .containsEntry("currentState", "EXPIRED");
+    }
 }
