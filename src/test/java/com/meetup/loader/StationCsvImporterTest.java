@@ -33,4 +33,11 @@ class StationCsvImporterTest extends LoaderDbTest {
         assertThat(importer.importFrom(f)).isEqualTo(1);
         assertThat(lines("테스트역")).isEqualTo("1호선,2호선");
     }
+
+    @Test
+    void readsMs949() throws Exception {
+        Path f = csv("name,line,lat,lng\n테스트역,3호선,37.5,127.0\n", Charset.forName("MS949"));
+        importer.importFrom(f);
+        assertThat(lines("테스트역")).isEqualTo("3호선");
+    }
 }
