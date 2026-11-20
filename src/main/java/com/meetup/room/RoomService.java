@@ -72,4 +72,17 @@ public class RoomService {
         }
         throw new IllegalStateException("방 코드 생성 충돌");
     }
+
+    public CreatedRoom create(CreateRoomRequest req) {
+        checkCapacity(req.capacity());
+        Instant now = clock.instant();
+        String hostToken = Tokens.generate();
+        String participantToken = Tokens.generate();
+        Participant host = new Participant(Tokens.id(), Nicknames.clean(req.nickname()), true, false,
+                now.toEpochMilli());
+        Room room = save(req, host, hostToken, participantToken, now);
+        log.info("room.created code={} theme={} capacity={}", room.code(), room.theme(), room.capacity());
+        return new CreatedRoom(room.code(), inviteUrl(room.code()), room.state(), room.rev(), room.expiresAt(),
+                host.id(), participantToken, hostToken);
+    }
 }
