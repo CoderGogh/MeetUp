@@ -6,8 +6,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -39,6 +41,19 @@ public class StationCsvImporter {
             f[i] = f[i].trim().replaceAll("^\"|\"$", "");
         }
         return f;
+    }
+
+    // 역명 기준 갱신 (후보 기준역 좌표 포함)
+    private void upsert(Map<String, Row> rows) {
+        jdbc.batchUpdate("INSERT INTO station (name, lines, geom) "
+                + "VALUES (?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) "
+                + "ON CONFLICT (name) DO UPDATE SET lines = EXCLUDED.lines, geom = EXCLUDED.geom",
+                List.copyOf(rows.entrySet()), rows.size(), (ps, e) -> {
+                    ps.setString(1, e.getKey());
+                    ps.setString(2, String.join(",", e.getValue().lines));
+                    ps.setDouble(3, e.getValue().lng);
+                    ps.setDouble(4, e.getValue().lat);
+                });
     }
 
     /** 헤더 위치 (영문·공공데이터 한글 헤더 모두 허용) */
