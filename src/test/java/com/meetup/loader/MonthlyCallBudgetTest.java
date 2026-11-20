@@ -39,4 +39,12 @@ class MonthlyCallBudgetTest extends LoaderDbTest {
         budget(2, nov).acquire();
         assertThatThrownBy(budget(2, nov)::acquire).isInstanceOf(QuotaExceededException.class);
     }
+
+    @Test
+    void resetsOnNextMonthInKst() {
+        budget(1, nov).acquire();
+        // 30분 뒤 = 12월 1일 00:00 KST
+        var dec = Clock.offset(nov, java.time.Duration.ofMinutes(30));
+        assertThat(budget(1, dec).remaining()).isEqualTo(1);
+    }
 }
