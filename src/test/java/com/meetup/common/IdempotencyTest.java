@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -41,5 +42,12 @@ class IdempotencyTest {
         assertThat(again.getStatusCode().value()).isEqualTo(201);
         assertThat(again.getHeaders().getFirst(Idempotency.REPLAYED)).isEqualTo("true");
         assertThat(again.getBody().toString()).contains("\"run\":1");
+    }
+
+    @Test
+    void rejectsKeyReusedForDifferentRequest() {
+        call("key-00002", "a");
+        assertThatThrownBy(() -> call("key-00002", "b")).isInstanceOf(ApiException.class)
+                .extracting("code").isEqualTo(ErrorCode.IDEMPOTENCY_KEY_REUSED);
     }
 }
