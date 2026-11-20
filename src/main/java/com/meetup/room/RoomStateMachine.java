@@ -36,4 +36,20 @@ public class RoomStateMachine {
                     trigger.hostOnly() ? "방장만 할 수 있습니다" : "직접 요청할 수 없는 전이입니다", where);
         }
     }
+
+    // 조회와 CAS 사이에 다른 요청이 먼저 바꾸면 그 단계로 409
+    private Transition apply(String code, RoomTrigger trigger, RoomState from, RoomState to) {
+        CasResult cas = rooms.transition(code, from, to);
+        if (cas.status() < 0) {
+            throw new ApiException(ErrorCode.ROOM_NOT_FOUND);
+        }
+        if (!cas.applied()) {
+            throw new ApiException(ErrorCode.INVALID_TRANSITION,
+                    Map.of("currentState", cas.state(), "roomRev", cas.rev()));
+        }
+        events.publishEvent(new RoomEvent(code, cas.rev(), "state.changed",
+                Map.of("from", from.name(), "to", to.name())));
+        log.info("room.transition code={} trigger={} from={} to={} rev={}", code, trigger, from, to, cas.rev());
+        return new Transition(from, to, cas.rev());
+    }
 }
