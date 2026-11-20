@@ -73,4 +73,11 @@ class ParticipantJoinTest {
         join(code, "Jun");
         assertThat(failure(() -> join(code, "jun"))).isEqualTo(ErrorCode.NICKNAME_TAKEN);
     }
+
+    @Test
+    void rejectsWhenFull() {
+        String code = RoomFixture.room(rooms, 2).code();
+        join(code, "준호");
+        assertThat(failure(() -> join(code, "서연"))).isEqualTo(ErrorCode.ROOM_FULL);
+    }
 }
