@@ -137,4 +137,13 @@ class RoomStateMachineTest {
         assertThat(ok.get()).isEqualTo(1);
         assertThat(redis.opsForHash().get(RoomKeys.room(code), "rev")).isEqualTo("2");
     }
+
+    @Test
+    void joinDuringReviewReturnsToCollecting() {
+        String code = room();
+        RoomFixture.setState(redis, code, RoomState.REVIEWING);
+        JoinedRoom joined = participants.join(code, new JoinRequest("준호"));
+        assertThat(rooms.find(code).state()).isEqualTo(RoomState.COLLECTING);
+        assertThat(joined.roomRev()).isEqualTo(3);
+    }
 }
