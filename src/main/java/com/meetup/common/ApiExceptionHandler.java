@@ -57,4 +57,11 @@ public class ApiExceptionHandler {
         };
         return respond(code, code.message(), Map.of());
     }
+
+    // 내부 오류는 원인 메시지를 응답에 싣지 않음
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<ErrorResponse> unexpected(Exception e) {
+        log.error("unhandled error type={}", e.getClass().getName(), e);
+        return respond(ErrorCode.INTERNAL, ErrorCode.INTERNAL.message(), Map.of());
+    }
 }
