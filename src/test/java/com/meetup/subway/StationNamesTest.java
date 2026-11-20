@@ -27,4 +27,10 @@ class StationNamesTest {
         assertThat(StationNames.line("신분당선(연장2)")).isEqualTo("신분당선");
         assertThat(StationNames.line("분당선")).isEqualTo("수인분당선");
     }
+
+    @Test
+    void ignoresLinesOutsideGraph() {
+        assertThat(StationNames.line("우이신설선")).isNull();
+        assertThat(StationNames.line("GTX-A")).isNull();
+    }
 }
