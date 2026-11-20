@@ -24,7 +24,7 @@ class OdsayRouteClientTest {
 
     final RestClient.Builder builder = RestClient.builder().baseUrl("https://api.odsay.com");
     final MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-    final OdsayRouteClient client = new OdsayRouteClient(builder.build(), KEY);
+    final OdsayRouteClient client = new OdsayRouteClient(builder.build(), KEY, CallBudget.UNLIMITED);
     final Station gangnam = new Station(1, "강남", List.of("2호선"), 37.4979, 127.0276);
 
     @Test
@@ -62,5 +62,15 @@ class OdsayRouteClientTest {
                 .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
         assertThatThrownBy(() -> client.find(gangnam, at(2, 37.5133, 127.1001)))
                 .isInstanceOf(QuotaExceededException.class);
+    }
+
+    @Test
+    void exhaustedBudgetSendsNoRequest() {
+        var noBudget = new OdsayRouteClient(builder.build(), KEY, () -> {
+            throw new QuotaExceededException("ODsay 월 호출 한도 30건 소진");
+        });
+        assertThatThrownBy(() -> noBudget.find(gangnam, at(2, 37.5133, 127.1001)))
+                .isInstanceOf(QuotaExceededException.class);
+        server.verify();
     }
 }

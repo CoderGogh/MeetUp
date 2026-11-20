@@ -11,3 +11,4 @@ meetup:
     stations-csv: ${STATIONS_CSV:}
     daily-limit: ${LOADER_DAILY_LIMIT:0}
     mode: ${LOADER_MODE:graph}
+    odsay-monthly-limit: ${ODSAY_MONTHLY_LIMIT:30}

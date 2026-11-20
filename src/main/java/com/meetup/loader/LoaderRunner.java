@@ -19,14 +19,16 @@ class LoaderRunner implements ApplicationRunner {
     private final StationCsvImporter importer;
     private final GraphMatrixLoader graph;
     private final TravelTimeLoader loader;
+    private final MonthlyCallBudget odsayBudget;
     private final LoaderProperties props;
 
     LoaderRunner(SeoulStationImporter seoul, StationCsvImporter importer, GraphMatrixLoader graph,
-            TravelTimeLoader loader, LoaderProperties props) {
+            TravelTimeLoader loader, MonthlyCallBudget odsayBudget, LoaderProperties props) {
         this.seoul = seoul;
         this.importer = importer;
         this.graph = graph;
         this.loader = loader;
+        this.odsayBudget = odsayBudget;
         this.props = props;
     }
 
@@ -43,6 +45,12 @@ class LoaderRunner implements ApplicationRunner {
             log.info("그래프 행렬: 저장 {} · 그래프 밖 역 {} · 좌표 없는 구간 {} · ODsay 표본 {}건 평균 오차 {}분 최대 {}분",
                     g.pairs(), g.stationsOutsideGraph(), g.skippedSegments(), g.samples(),
                     String.format("%.1f", g.meanAbsError()), String.format("%.1f", g.maxAbsError()));
+            return;
+        }
+        int left = odsayBudget.remaining();
+        log.info("ODsay 이번 달 남은 호출 {}건 · 이번 실행 상한 {}건", left, props.dailyLimit());
+        if (props.hasOdsayKey() && left == 0) {
+            log.warn("ODsay 월 한도 소진. 다음 달에 다시 실행");
             return;
         }
         LoadReport r = loader.run();
