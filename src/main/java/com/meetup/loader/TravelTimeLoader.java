@@ -43,7 +43,8 @@ public class TravelTimeLoader {
             }
             load(batch, t);
         }
-        return new LoadReport(planned, t.loaded, t.failed, progress.remaining(props.maxAttempts()));
+        return new LoadReport(planned, t.loaded, t.failed, progress.remaining(props.maxAttempts()),
+                t.quotaExceeded);
     }
 
     // 배치 조회 후 한 번에 저장

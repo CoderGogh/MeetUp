@@ -39,5 +39,8 @@ class LoaderRunner implements ApplicationRunner {
         LoadReport r = loader.run();
         log.info("행렬 적재: 신규 조합 {} · 저장 {} · 실패 {} · 남음 {}",
                 r.planned(), r.loaded(), r.failed(), r.remaining());
+        if (r.quotaExceeded()) {
+            log.warn("외부 API 호출 한도 초과로 중단. 한도가 풀린 뒤 다시 실행");
+        }
     }
 }
