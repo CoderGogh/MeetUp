@@ -80,4 +80,11 @@ class ParticipantJoinTest {
         join(code, "준호");
         assertThat(failure(() -> join(code, "서연"))).isEqualTo(ErrorCode.ROOM_FULL);
     }
+
+    @Test
+    void concurrentJoinsNeverExceedCapacity() throws Exception {
+        String code = RoomFixture.room(rooms, 5).code();
+        assertThat(concurrently(code, 20, i -> "참여자" + i)).isEqualTo(4);
+        assertThat(redis.opsForHash().size(RoomKeys.participants(code))).isEqualTo(5);
+    }
 }
