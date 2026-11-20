@@ -119,4 +119,14 @@ class RoomApiTest {
             assertThat(redis.getExpire(key)).isPositive().isLessThanOrEqualTo(7 * 3600);
         }
     }
+
+    @Test
+    void storesOnlyTokenHashes() throws Exception {
+        JsonNode room = created();
+        String code = room.get("code").asText();
+        assertThat(redis.opsForHash().values(RoomKeys.room(code)).toString())
+                .doesNotContain(room.get("hostToken").asText());
+        assertThat(redis.opsForHash().keys(RoomKeys.tokens(code)).toString())
+                .doesNotContain(room.get("participantToken").asText());
+    }
 }
