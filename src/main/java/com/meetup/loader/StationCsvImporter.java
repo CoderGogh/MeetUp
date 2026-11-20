@@ -38,4 +38,24 @@ public class StationCsvImporter {
         }
         return f;
     }
+
+    /** 헤더 위치 (영문·공공데이터 한글 헤더 모두 허용) */
+    private record Columns(int name, int line, int lat, int lng) {
+
+        static Columns of(String[] header) {
+            List<String> h = List.of(header);
+            return new Columns(find(h, "name", "역사명", "역명"), find(h, "line", "호선", "노선명"),
+                    find(h, "lat", "위도"), find(h, "lng", "경도"));
+        }
+
+        private static int find(List<String> header, String... names) {
+            for (String n : names) {
+                int i = header.indexOf(n);
+                if (i >= 0) {
+                    return i;
+                }
+            }
+            throw new IllegalArgumentException("CSV 헤더 없음: " + names[0]);
+        }
+    }
 }
