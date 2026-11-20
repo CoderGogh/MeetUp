@@ -21,6 +21,10 @@ public class RoomRepository {
     private static final RedisScript<Long> CREATE =
             RedisScript.of(new ClassPathResource("redis/room_create.lua"), Long.class);
 
+    @SuppressWarnings("rawtypes")
+    private static final RedisScript<List> JOIN =
+            RedisScript.of(new ClassPathResource("redis/room_join.lua"), List.class);
+
     private final StringRedisTemplate redis;
     private final ObjectMapper json;
 
@@ -52,6 +56,13 @@ public class RoomRepository {
                 String.valueOf(room.createdAt().toEpochMilli()), String.valueOf(room.expiresAt().toEpochMilli()),
                 host.id(), write(host), Nicknames.key(host.nickname()), participantTokenHash);
         return Long.valueOf(1).equals(created);
+    }
+
+    // 정원·별명 중복·단계 검사 후 등록 (원자)
+    public JoinResult join(String code, Participant p, String tokenHash, Instant now) {
+        List<?> raw = redis.execute(JOIN, RoomKeys.all(code), String.valueOf(now.toEpochMilli()), p.id(), write(p),
+                Nicknames.key(p.nickname()), tokenHash);
+        return JoinResult.of(raw);
     }
 
     public Optional<Room> find(String code) {

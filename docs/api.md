@@ -49,3 +49,17 @@
 - Redis 키 `room:{코드}`, `:participants`, `:nicknames`, `:tokens` 네 개가 같은 TTL로 함께 사라진다
 - 토큰은 SHA-256 해시만 저장한다. 원문은 생성·입장 응답에만 실린다
 - 단, 재전송에 같은 응답을 돌려주려고 그 응답 본문(토큰 포함)을 멱등성 기록에 보존 기간 동안 둔다. 보존 기간은 방 TTL 이하
+
+## 입장
+
+| 메서드 | 경로 | 헤더 | 응답 |
+|---|---|---|---|
+| POST | `/rooms/{code}/participants` | `Idempotency-Key` | 201 `{participantId, participantToken, roomRev}` |
+
+요청: `{"nickname": "준호"}`. 링크(방 코드)만 있으면 누구나 들어올 수 있다 (FR-02).
+
+- 정원·별명 중복·단계 검사와 등록을 Lua 스크립트 하나로 처리한다. 동시에 몰려도 정원을 넘지 않고, 같은 별명은 한 명만 들어간다
+- 별명 중복은 대소문자 무시. 같은 사람이 두 기기로 들어오는 것도 별명 중복으로 막는다
+- `COLLECTING`·`REVIEWING`에서만 입장. 그 외 단계는 409 `INVALID_TRANSITION` + `currentState`
+- 입장하면 `roomRev`가 1 오르고 `participant.joined` 이벤트를 낸다 (SSE 전파는 3주차)
+- 이후 요청은 `X-Participant-Token`으로 본인을 밝힌다. 별명은 로그에 남기지 않는다

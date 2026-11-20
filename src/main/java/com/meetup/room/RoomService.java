@@ -43,6 +43,12 @@ public class RoomService {
         return room;
     }
 
+    // 방 관련 요청 키 보존 기간 = 남은 방 수명 (RFP 8.5.1)
+    Duration remaining(String code) {
+        Duration left = Duration.between(clock.instant(), load(code).expiresAt());
+        return left.compareTo(Duration.ofSeconds(1)) < 0 ? Duration.ofSeconds(1) : left;
+    }
+
     // 참여자 토큰 → 참여자 ID. 없거나 틀리면 401
     String authenticate(String code, String participantToken) {
         if (participantToken == null || participantToken.isBlank()) {
