@@ -11,3 +11,16 @@ FROM (VALUES
     ('노량진',     '1호선,9호선',            37.5131, 126.9425)
 ) AS v (name, lines, lat, lng)
 ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO station (name, lines, geom)
+SELECT name, lines, ST_SetSRID(ST_MakePoint(lng, lat), 4326)
+FROM (VALUES
+    ('잠실',       '2호선,8호선',                          37.5133, 127.1001),
+    ('건대입구',   '2호선,7호선',                          37.5404, 127.0692),
+    ('왕십리',     '2호선,5호선,경의중앙선,수인분당선',    37.5612, 127.0371),
+    ('성수',       '2호선',                                37.5446, 127.0558),
+    ('천호',       '5호선,8호선',                          37.5386, 127.1236),
+    ('청량리',     '1호선,경의중앙선,수인분당선',          37.5803, 127.0470),
+    ('군자',       '5호선,7호선',                          37.5571, 127.0794)
+) AS v (name, lines, lat, lng)
+ON CONFLICT (name) DO NOTHING;
