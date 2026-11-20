@@ -21,4 +21,11 @@ class SeoulStationResponseTest {
                 {"subwayStationMaster":{"RESULT":{"CODE":"INFO-200","MESSAGE":"해당하는 데이터가 없습니다."}}}"""))
                 .hasMessageContaining("INFO-200");
     }
+
+    @Test
+    void xmlAuthErrorThrows() {
+        assertThatThrownBy(() -> SeoulStationResponse.parse(
+                "<RESULT><CODE>INFO-100</CODE><MESSAGE><![CDATA[인증키가 유효하지 않습니다.]]></MESSAGE></RESULT>"))
+                .hasMessageContaining("INFO-100");
+    }
 }
