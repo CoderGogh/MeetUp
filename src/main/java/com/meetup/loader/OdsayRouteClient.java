@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.meetup.place.Candidate;
 import com.meetup.place.Station;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 /** ODsay 대중교통 경로 조회. 인증키는 쿼리에만 싣고 오류 메시지에 남기지 않음 */
 public class OdsayRouteClient implements RouteClient {
@@ -30,13 +32,19 @@ public class OdsayRouteClient implements RouteClient {
     }
 
     private JsonNode call(Station from, Candidate to) {
-        JsonNode body = http.get()
-                .uri(PATH, from.lng(), from.lat(), to.lng(), to.lat(), apiKey)
-                .retrieve()
-                .body(JsonNode.class);
-        if (body == null) {
-            throw new RouteException("ODsay 빈 응답");
+        try {
+            JsonNode body = http.get()
+                    .uri(PATH, from.lng(), from.lat(), to.lng(), to.lat(), apiKey)
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (body == null) {
+                throw new RouteException("ODsay 빈 응답");
+            }
+            return body;
+        } catch (RestClientResponseException e) {
+            throw new RouteException("ODsay HTTP " + e.getStatusCode().value());
+        } catch (RestClientException e) {
+            throw new RouteException("ODsay 호출 실패 " + e.getClass().getSimpleName());
         }
-        return body;
     }
 }
