@@ -1,7 +1,9 @@
 package com.meetup.loader;
 
+import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 /** 이동시간 벌크 저장 + 진행 완료 표시 (한 트랜잭션) */
 @Repository
@@ -11,6 +13,20 @@ public class TravelTimeWriter {
 
     public TravelTimeWriter(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
+    }
+
+    @Transactional
+    public void save(List<LoadedRoute> routes) {
+        jdbc.batchUpdate("INSERT INTO travel_time (station_id, candidate_id, minutes, transfers, source) "
+                + "VALUES (?, ?, ?, ?, ?) ON CONFLICT (station_id, candidate_id) DO UPDATE SET "
+                + "minutes = EXCLUDED.minutes, transfers = EXCLUDED.transfers, "
+                + "source = EXCLUDED.source, updated_at = now()", routes, routes.size(), (ps, r) -> {
+                    ps.setInt(1, r.key().stationId());
+                    ps.setInt(2, r.key().candidateId());
+                    ps.setInt(3, r.route().minutes());
+                    ps.setInt(4, r.route().transfers());
+                    ps.setString(5, r.route().source().name());
+                });
     }
 
     /** 조회 성공 조합 */
