@@ -5,16 +5,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/** 역사마스터 응답 해석 */
+/** 역사마스터 응답 해석. 인증 오류는 JSON 요청에도 XML로 옴 */
 final class SeoulStationResponse {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final Pattern XML_CODE = Pattern.compile("<CODE>([^<]+)</CODE>");
 
     private SeoulStationResponse() {
     }
 
     static List<MasterStation> parse(String body) {
+        if (body.trim().startsWith("<")) {
+            Matcher m = XML_CODE.matcher(body);
+            throw new IllegalStateException("서울시 API 오류 코드 " + (m.find() ? m.group(1) : "?"));
+        }
         JsonNode root = read(body).path("subwayStationMaster");
         String code = root.path("RESULT").path("CODE").asText("?");
         if (!"INFO-000".equals(code)) {
