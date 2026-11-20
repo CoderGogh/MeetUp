@@ -49,4 +49,10 @@ class CandidateSeedTest {
                 "SELECT DISTINCT unnest(theme_tags) FROM candidate", String.class);
         assertThat(tags).allSatisfy(t -> Theme.valueOf(t));
     }
+
+    // 조건에 걸리는 후보명
+    private java.util.List<String> violating(String where) {
+        return jdbc.queryForList("SELECT c.name FROM candidate c "
+                + "JOIN station s ON s.id = c.station_id WHERE " + where, String.class);
+    }
 }
