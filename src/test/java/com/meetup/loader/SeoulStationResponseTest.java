@@ -14,4 +14,11 @@ class SeoulStationResponseTest {
                  "row":[{"BLDN_ID":"0150","BLDN_NM":"서울역","ROUTE":"1호선","LAT":"37.556228","LOT":"126.972135"}]}}""");
         assertThat(rows).containsExactly(new MasterStation("서울역", "1호선", 37.556228, 126.972135));
     }
+
+    @Test
+    void jsonErrorThrows() {
+        assertThatThrownBy(() -> SeoulStationResponse.parse("""
+                {"subwayStationMaster":{"RESULT":{"CODE":"INFO-200","MESSAGE":"해당하는 데이터가 없습니다."}}}"""))
+                .hasMessageContaining("INFO-200");
+    }
 }
