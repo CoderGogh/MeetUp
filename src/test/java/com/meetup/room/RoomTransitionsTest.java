@@ -1,9 +1,12 @@
 package com.meetup.room;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static com.meetup.room.RoomState.COLLECTING;
 import static com.meetup.room.RoomState.CONFIRMED;
+import static com.meetup.room.RoomState.EXPIRED;
 import static com.meetup.room.RoomState.REVIEWING;
 import static com.meetup.room.RoomState.VOTING;
 import static com.meetup.room.RoomTrigger.CALCULATE_CANDIDATES;
@@ -33,5 +36,20 @@ class RoomTransitionsTest {
         assertThat(RoomTransitions.next(COLLECTING, START_VOTING)).isEmpty();
         assertThat(RoomTransitions.next(COLLECTING, CONFIRM)).isEmpty();
         assertThat(RoomTransitions.next(REVIEWING, CONFIRM)).isEmpty();
+    }
+
+    @Test
+    void rejectsOtherRollbacks() {
+        assertThat(RoomTransitions.next(REVIEWING, RESET_INPUT)).isEmpty();
+        assertThat(RoomTransitions.next(VOTING, CALCULATE_CANDIDATES)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @EnumSource(RoomTrigger.class)
+    void confirmedAndExpiredAreFinal(RoomTrigger trigger) {
+        assertThat(RoomTransitions.next(EXPIRED, trigger)).isEmpty();
+        if (trigger != RoomTrigger.EXPIRE) {
+            assertThat(RoomTransitions.next(CONFIRMED, trigger)).isEmpty();
+        }
     }
 }
