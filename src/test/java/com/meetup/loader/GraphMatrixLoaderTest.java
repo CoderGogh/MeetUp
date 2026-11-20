@@ -33,4 +33,10 @@ class GraphMatrixLoaderTest extends LoaderDbTest {
         assertThat(r.pairs()).isGreaterThan(pairs() * 9 / 10);
         assertThat(count("SELECT count(*) FROM travel_time WHERE source = 'GRAPH'")).isEqualTo(r.pairs());
     }
+
+    @Test
+    void sameStationIsZero() {
+        run();
+        assertThat(minutes("강남", "강남")).isZero();
+    }
 }
