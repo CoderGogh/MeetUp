@@ -70,4 +70,9 @@ class CandidateSeedTest {
     void meetingRequiresTransfer() {
         assertThat(violating("'MEETING' = ANY (c.theme_tags) AND s.lines NOT LIKE '%,%'")).isEmpty();
     }
+
+    @Test
+    void casualAndDateAvoidSmallArea() {
+        assertThat(violating("c.theme_tags && '{CASUAL,DATE}' AND c.area_type = 'SMALL'")).isEmpty();
+    }
 }
