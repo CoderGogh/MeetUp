@@ -41,4 +41,14 @@ public class MonthlyCallBudget implements CallBudget {
         }
         throw new QuotaExceededException(provider + " 월 호출 한도 " + limit + "건 소진");
     }
+
+    public int used() {
+        List<Integer> rows = jdbc.queryForList("SELECT calls FROM api_call_budget WHERE provider = ? AND month = ?",
+                Integer.class, provider, month());
+        return rows.isEmpty() ? 0 : rows.get(0);
+    }
+
+    public int remaining() {
+        return Math.max(0, limit - used());
+    }
 }
