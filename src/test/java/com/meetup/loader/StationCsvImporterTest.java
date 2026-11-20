@@ -48,4 +48,10 @@ class StationCsvImporterTest extends LoaderDbTest {
         Double lat = jdbc.queryForObject("SELECT ST_Y(geom) FROM station WHERE name = '테스트역'", Double.class);
         assertThat(lat).isEqualTo(37.6);
     }
+
+    @Test
+    void rejectsUnknownHeader() throws Exception {
+        Path f = csv("a,b,c\n", Charset.forName("UTF-8"));
+        assertThatThrownBy(() -> importer.importFrom(f)).isInstanceOf(IllegalArgumentException.class);
+    }
 }
