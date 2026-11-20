@@ -26,4 +26,10 @@ class SubwaySourcesTest {
         assertThat(linked(metro, "5호선", "강동", "둔촌동")).isTrue();
         assertThat(linked(metro, "2호선", "시청", "용답")).isFalse();
     }
+
+    @Test
+    void loopsClose() {
+        assertThat(linked(metro, "2호선", "충정로", "시청")).isTrue();
+        assertThat(linked(metro, "6호선", "구산", "응암")).isTrue();
+    }
 }
