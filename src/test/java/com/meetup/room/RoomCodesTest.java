@@ -21,4 +21,13 @@ class RoomCodesTest {
         IntStream.range(0, 10_000).forEach(i -> codes.add(RoomCodes.generate()));
         assertThat(codes).hasSize(10_000);
     }
+
+    @Test
+    void rejectsMalformedCodes() {
+        assertThat(RoomCodes.isValid(RoomCodes.generate())).isTrue();
+        assertThat(RoomCodes.isValid("abc")).isFalse();
+        assertThat(RoomCodes.isValid("ABCDEFGHJKMN")).isFalse();
+        assertThat(RoomCodes.isValid("room:{x}:tok")).isFalse();
+        assertThat(RoomCodes.isValid(null)).isFalse();
+    }
 }
