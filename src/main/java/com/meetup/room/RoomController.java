@@ -4,6 +4,8 @@ import com.meetup.common.Idempotency;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -35,5 +37,11 @@ class RoomController {
             CreatedRoom room = rooms.create(req);
             return ResponseEntity.created(URI.create("/rooms/" + room.code())).body(room);
         });
+    }
+
+    @GetMapping("/{code}")
+    RoomView get(@PathVariable String code,
+            @RequestHeader(value = PARTICIPANT_TOKEN, required = false) String token) {
+        return rooms.view(code, token);
     }
 }
