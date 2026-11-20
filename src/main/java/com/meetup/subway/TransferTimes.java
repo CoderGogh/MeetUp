@@ -24,6 +24,15 @@ public final class TransferTimes {
         return new TransferTimes(m);
     }
 
+    // 데이터 없으면 null
+    public Double walk(String station, String from, String to) {
+        if (from.replace("급행", "").equals(to.replace("급행", ""))) {
+            return 0.0;
+        }
+        Double m = minutes.get(key(station, from, to));
+        return m != null ? m : minutes.get(key(station, to, from));
+    }
+
     private static String key(String station, String from, String to) {
         return station + ":" + from + ":" + to;
     }
