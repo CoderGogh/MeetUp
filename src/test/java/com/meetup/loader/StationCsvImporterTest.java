@@ -40,4 +40,12 @@ class StationCsvImporterTest extends LoaderDbTest {
         importer.importFrom(f);
         assertThat(lines("테스트역")).isEqualTo("3호선");
     }
+
+    @Test
+    void updatesExistingStation() throws Exception {
+        importer.importFrom(csv("name,line,lat,lng\n테스트역,3호선,37.5,127.0\n", Charset.forName("UTF-8")));
+        importer.importFrom(csv("name,line,lat,lng\n테스트역,3호선,37.6,127.1\n", Charset.forName("UTF-8")));
+        Double lat = jdbc.queryForObject("SELECT ST_Y(geom) FROM station WHERE name = '테스트역'", Double.class);
+        assertThat(lat).isEqualTo(37.6);
+    }
 }
