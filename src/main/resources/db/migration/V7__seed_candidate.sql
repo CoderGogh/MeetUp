@@ -41,3 +41,18 @@ FROM (VALUES
 ) AS v (name, area, tags, underground)
 JOIN station s ON s.name = v.name
 ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO candidate (name, station_id, area_type, region, theme_tags, underground, geom)
+SELECT v.name, s.id, v.area, 'WEST', v.tags::VARCHAR(10)[], v.underground, s.geom
+FROM (VALUES
+    ('홍대입구', 'LARGE',  '{CASUAL,DATE}',        false),
+    ('합정',     'MEDIUM', '{DATE,TALK,INDOOR}',   true),
+    ('신촌',     'LARGE',  '{CASUAL,DATE}',        false),
+    ('여의도',   'MEDIUM', '{MEETING,INDOOR}',     true),
+    ('영등포',   'LARGE',  '{CASUAL,INDOOR}',      true),
+    ('신도림',   'MEDIUM', '{MEETING,INDOOR}',     true),
+    ('연신내',   'MEDIUM', '{CASUAL,TALK}',        false),
+    ('마곡나루', 'SMALL',  '{MEETING,TALK}',       false)
+) AS v (name, area, tags, underground)
+JOIN station s ON s.name = v.name
+ON CONFLICT (name) DO NOTHING;
