@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,5 +41,15 @@ class ParticipantApiTest {
         String code = RoomFixture.room(rooms, 5).code();
         join(code, UUID.randomUUID().toString(), "준호").andExpect(status().isCreated())
                 .andExpect(jsonPath("$.participantToken").isString()).andExpect(jsonPath("$.roomRev").value(2));
+    }
+
+    @Test
+    void replayReturnsSameParticipant() throws Exception {
+        String code = RoomFixture.room(rooms, 5).code();
+        String key = UUID.randomUUID().toString();
+        String first = join(code, key, "준호").andReturn().getResponse().getContentAsString();
+        join(code, key, "준호").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.participantId").value(json.readTree(first).get("participantId").asText()));
+        assertThat(redis.opsForHash().size(RoomKeys.participants(code))).isEqualTo(2);
     }
 }
