@@ -77,4 +77,19 @@ public class Idempotency {
         }
         return ResponseEntity.status(record.status()).header(REPLAYED, "true").body(record.body());
     }
+
+    // 선점한 요청만 실행. 실패하면 키를 지워 재시도가 다시 실행되게 함
+    private ResponseEntity<Object> run(String redisKey, String fingerprint, Supplier<ResponseEntity<?>> action) {
+        try {
+            ResponseEntity<?> response = action.get();
+            var done = new IdempotencyRecord(fingerprint, response.getStatusCode().value(),
+                    json.valueToTree(response.getBody()));
+            keepTtlSet(redisKey, write(done));
+            return ResponseEntity.status(response.getStatusCode()).headers(response.getHeaders())
+                    .body(response.getBody());
+        } catch (RuntimeException e) {
+            redis.delete(redisKey);
+            throw e;
+        }
+    }
 }
