@@ -21,4 +21,10 @@ class LoadProgressRepositoryTest extends LoaderDbTest {
     void planCoversEveryPair() {
         assertThat(progress.plan()).isEqualTo(pairs());
     }
+
+    @Test
+    void planAddsOnlyNewPairs() {
+        progress.plan();
+        assertThat(progress.plan()).isZero();
+    }
 }
