@@ -1,6 +1,8 @@
 package com.meetup.room;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,5 +32,10 @@ class RoomApiTest {
     ResultActions create(String key, String body) throws Exception {
         return mvc.perform(post("/rooms").header("Idempotency-Key", key)
                 .contentType(MediaType.APPLICATION_JSON).content(body));
+    }
+
+    JsonNode created() throws Exception {
+        String res = create(UUID.randomUUID().toString(), BODY).andReturn().getResponse().getContentAsString();
+        return json.readTree(res);
     }
 }
