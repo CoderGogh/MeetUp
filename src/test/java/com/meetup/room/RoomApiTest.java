@@ -93,4 +93,11 @@ class RoomApiTest {
         mvc.perform(get("/rooms/" + code).header("X-Participant-Token", "wrong"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void unknownRoomIsNotFound() throws Exception {
+        mvc.perform(get("/rooms/" + RoomCodes.generate()).header("X-Participant-Token", "x"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("ROOM_NOT_FOUND"));
+        mvc.perform(get("/rooms/bad-code")).andExpect(status().isNotFound());
+    }
 }
