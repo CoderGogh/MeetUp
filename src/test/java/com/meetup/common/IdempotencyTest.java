@@ -50,4 +50,13 @@ class IdempotencyTest {
         assertThatThrownBy(() -> call("key-00002", "b")).isInstanceOf(ApiException.class)
                 .extracting("code").isEqualTo(ErrorCode.IDEMPOTENCY_KEY_REUSED);
     }
+
+    @Test
+    void pendingKeyIsInProgress() {
+        idempotency.execute(scope, "key-00003", "a", ttl, () -> {
+            assertThatThrownBy(() -> call("key-00003", "a")).isInstanceOf(ApiException.class)
+                    .extracting("code").isEqualTo(ErrorCode.IDEMPOTENCY_IN_PROGRESS);
+            return ResponseEntity.ok().build();
+        });
+    }
 }
