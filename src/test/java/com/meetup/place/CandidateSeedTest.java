@@ -36,4 +36,10 @@ class CandidateSeedTest {
                 + "CROSS JOIN unnest(string_to_array(s.lines, ',')) AS line GROUP BY line) t";
         assertThat(jdbc.queryForObject(sql, Integer.class)).isLessThanOrEqualTo(15);
     }
+
+    @Test
+    void everyCandidateHasTheme() {
+        String sql = "SELECT count(*) FROM candidate WHERE cardinality(theme_tags) = 0";
+        assertThat(jdbc.queryForObject(sql, Integer.class)).isZero();
+    }
 }
