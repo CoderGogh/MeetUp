@@ -25,6 +25,13 @@ class LoaderConfig {
     }
 
     @Bean
+    SeoulStationImporter seoulStationImporter(LoaderProperties props, RestClient.Builder builder,
+            StationWriter writer) {
+        RestClient http = builder.baseUrl("http://openapi.seoul.go.kr:8088").build();
+        return new SeoulStationImporter(new SeoulStationClient(http, props.seoulKey()), writer);
+    }
+
+    @Bean
     TravelTimeLoader travelTimeLoader(PlaceRepository places, LoadProgressRepository progress,
             TravelTimeWriter writer, RouteClient client, LoaderProperties props) {
         return new TravelTimeLoader(places, progress, writer, client, props);

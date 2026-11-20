@@ -8,18 +8,21 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-/** 기준역 적재 후 이동시간 행렬 적재 */
+/** 기준역 적재(서울시 API·CSV) 후 이동시간 행렬 적재 */
 @Component
 @ConditionalOnProperty(name = "meetup.loader.enabled", havingValue = "true")
 class LoaderRunner implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(LoaderRunner.class);
 
+    private final SeoulStationImporter seoul;
     private final StationCsvImporter importer;
     private final TravelTimeLoader loader;
     private final LoaderProperties props;
 
-    LoaderRunner(StationCsvImporter importer, TravelTimeLoader loader, LoaderProperties props) {
+    LoaderRunner(SeoulStationImporter seoul, StationCsvImporter importer, TravelTimeLoader loader,
+            LoaderProperties props) {
+        this.seoul = seoul;
         this.importer = importer;
         this.loader = loader;
         this.props = props;
@@ -27,6 +30,9 @@ class LoaderRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        if (props.hasSeoulKey()) {
+            log.info("기준역 {}개 적재 (서울시 역사마스터)", seoul.importStations());
+        }
         if (props.stationsCsv() != null && !props.stationsCsv().isBlank()) {
             log.info("기준역 {}개 적재", importer.importFrom(Path.of(props.stationsCsv())));
         }

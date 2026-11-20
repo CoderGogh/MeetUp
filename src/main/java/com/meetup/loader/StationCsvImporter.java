@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 /** 기준역 CSV 적재. 한 행 = 역 × 노선, 같은 역명은 노선을 합쳐 1행 */
@@ -20,10 +19,10 @@ public class StationCsvImporter {
 
     private static final Charset MS949 = Charset.forName("MS949");
 
-    private final JdbcTemplate jdbc;
+    private final StationWriter writer;
 
-    public StationCsvImporter(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public StationCsvImporter(StationWriter writer) {
+        this.writer = writer;
     }
 
     public int importFrom(Path csv) throws IOException {
@@ -60,26 +59,19 @@ public class StationCsvImporter {
         return f;
     }
 
-    // 역명 기준 갱신 (후보 기준역 좌표 포함)
     private void upsert(Map<String, Row> rows) {
-        jdbc.batchUpdate("INSERT INTO station (name, lines, geom) "
-                + "VALUES (?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) "
-                + "ON CONFLICT (name) DO UPDATE SET lines = EXCLUDED.lines, geom = EXCLUDED.geom",
-                List.copyOf(rows.entrySet()), rows.size(), (ps, e) -> {
-                    ps.setString(1, e.getKey());
-                    ps.setString(2, String.join(",", e.getValue().lines));
-                    ps.setDouble(3, e.getValue().lng);
-                    ps.setDouble(4, e.getValue().lat);
-                });
+        writer.upsert(rows.entrySet().stream()
+                .map(e -> new StationRecord(e.getKey(), e.getValue().lines, e.getValue().lat, e.getValue().lng))
+                .toList());
     }
 
-    /** 헤더 위치 (영문·공공데이터 한글 헤더 모두 허용) */
+    /** 헤더 위치 (영문·한글·서울시 API 필드명 허용) */
     private record Columns(int name, int line, int lat, int lng) {
 
         static Columns of(String[] header) {
             List<String> h = List.of(header);
-            return new Columns(find(h, "name", "역사명", "역명"), find(h, "line", "호선", "노선명"),
-                    find(h, "lat", "위도"), find(h, "lng", "경도"));
+            return new Columns(find(h, "name", "역사명", "역명", "BLDN_NM"), find(h, "line", "호선", "노선명", "ROUTE"),
+                    find(h, "lat", "위도", "LAT"), find(h, "lng", "경도", "LOT"));
         }
 
         private static int find(List<String> header, String... names) {
