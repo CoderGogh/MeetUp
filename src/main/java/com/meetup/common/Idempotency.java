@@ -52,4 +52,13 @@ public class Idempotency {
                 key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8),
                 Expiration.keepTtl(), SetOption.upsert()));
     }
+
+    // 요청 내용 지문 (같은 키를 다른 요청에 쓰는지 판별)
+    public String fingerprint(Object... parts) {
+        try {
+            return Hashes.sha256(json.writeValueAsString(parts));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }
