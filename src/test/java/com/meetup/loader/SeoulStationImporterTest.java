@@ -51,4 +51,10 @@ class SeoulStationImporterTest extends LoaderDbTest {
         var graph = SeoulStationImporter.graphLines().keySet();
         assertThat(jdbc.queryForList("SELECT name FROM candidate", String.class)).allMatch(graph::contains);
     }
+
+    @Test
+    void fallsBackToNameWhenLineDiffers() {
+        importer(new MasterStation("한남", "경원선", 37.5294, 127.0090)).importStations();
+        assertThat(lines("한남")).isEqualTo("경의중앙선");
+    }
 }

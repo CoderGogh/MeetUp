@@ -1,0 +1,72 @@
+package com.meetup.subway;
+
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
+class SubwayGraphTest {
+
+    // 정차 0, 환승 대기 1, 환승 보행 기본 2, 첫 대기 0, 추정 60km/h·우회 1.0
+    final GraphParams p = new GraphParams(0, 1, 2, 0, 60, 1.0);
+    final TransferTimes none = TransferTimes.load();
+
+    SubwayGraph graph(LineSegment... segments) {
+        return SubwayGraph.build(List.of(segments), Map.of(), none, p);
+    }
+
+    @Test
+    void sumsRideTimesOnOneLine() {
+        var g = graph(new LineSegment("X", "가", "나", 2.0), new LineSegment("X", "나", "다", 3.0));
+        var path = g.shortestFrom("가", 0).get("다");
+        assertThat(path.minutes()).isEqualTo(5.0);
+        assertThat(path.transfers()).isZero();
+    }
+
+    @Test
+    void addsTransferWalkAndWait() {
+        var g = graph(new LineSegment("X", "가", "나", 2.0), new LineSegment("Y", "나", "라", 1.0));
+        var path = g.shortestFrom("가", 0).get("라");
+        assertThat(path.minutes()).isEqualTo(2 + 2 + 1 + 1.0);
+        assertThat(path.transfers()).isEqualTo(1);
+    }
+
+    @Test
+    void prefersFasterRouteWithTransfer() {
+        var g = graph(new LineSegment("X", "가", "나", 1.0), new LineSegment("X", "나", "다", 20.0),
+                new LineSegment("Y", "나", "다", 2.0));
+        assertThat(g.shortestFrom("가", 0).get("다").minutes()).isEqualTo(1 + 3 + 2.0);
+    }
+
+    @Test
+    void originIsZero() {
+        var g = graph(new LineSegment("X", "가", "나", 2.0));
+        assertThat(g.shortestFrom("가", 3).get("가").minutes()).isZero();
+    }
+
+    @Test
+    void estimatesSegmentFromCoordinates() {
+        // 위도 0.009도 ≈ 1km → 60km/h에서 1분
+        var g = SubwayGraph.build(List.of(new LineSegment("X", "가", "나", null)),
+                Map.of("가", new double[] {37.5, 127.0}, "나", new double[] {37.509, 127.0}), none, p);
+        assertThat(g.shortestFrom("가", 0).get("나").minutes()).isCloseTo(1.0, within(0.01));
+    }
+
+    @Test
+    void skipsSegmentWithoutCoordinates() {
+        var g = graph(new LineSegment("X", "가", "나", null));
+        assertThat(g.skipped()).isEqualTo(1);
+        assertThat(g.has("가")).isFalse();
+    }
+
+    @Test
+    void metroGraphConnectsAcrossLines() {
+        var g = SubwayGraph.build(SubwaySources.seoulMetro(), Map.of(), none, GraphParams.DEFAULT);
+        var paths = g.shortestFrom("강남", 0);
+        assertThat(paths.get("잠실").minutes()).isBetween(10.0, 20.0);
+        assertThat(paths.get("잠실").transfers()).isZero();
+        assertThat(paths.get("노원").transfers()).isPositive();
+    }
+}

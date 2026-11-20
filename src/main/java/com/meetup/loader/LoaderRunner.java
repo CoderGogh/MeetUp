@@ -8,7 +8,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-/** 기준역 적재(서울시 API·CSV) 후 이동시간 행렬 적재 */
+/** 기준역 적재(서울시 API·CSV) 후 이동시간 행렬 적재 (그래프 계산 또는 ODsay) */
 @Component
 @ConditionalOnProperty(name = "meetup.loader.enabled", havingValue = "true")
 class LoaderRunner implements ApplicationRunner {
@@ -17,13 +17,15 @@ class LoaderRunner implements ApplicationRunner {
 
     private final SeoulStationImporter seoul;
     private final StationCsvImporter importer;
+    private final GraphMatrixLoader graph;
     private final TravelTimeLoader loader;
     private final LoaderProperties props;
 
-    LoaderRunner(SeoulStationImporter seoul, StationCsvImporter importer, TravelTimeLoader loader,
-            LoaderProperties props) {
+    LoaderRunner(SeoulStationImporter seoul, StationCsvImporter importer, GraphMatrixLoader graph,
+            TravelTimeLoader loader, LoaderProperties props) {
         this.seoul = seoul;
         this.importer = importer;
+        this.graph = graph;
         this.loader = loader;
         this.props = props;
     }
@@ -35,6 +37,13 @@ class LoaderRunner implements ApplicationRunner {
         }
         if (props.stationsCsv() != null && !props.stationsCsv().isBlank()) {
             log.info("기준역 {}개 적재", importer.importFrom(Path.of(props.stationsCsv())));
+        }
+        if (props.graphMode()) {
+            GraphReport g = graph.run();
+            log.info("그래프 행렬: 저장 {} · 그래프 밖 역 {} · 좌표 없는 구간 {} · ODsay 표본 {}건 평균 오차 {}분 최대 {}분",
+                    g.pairs(), g.stationsOutsideGraph(), g.skippedSegments(), g.samples(),
+                    String.format("%.1f", g.meanAbsError()), String.format("%.1f", g.maxAbsError()));
+            return;
         }
         LoadReport r = loader.run();
         log.info("행렬 적재: 신규 조합 {} · 저장 {} · 실패 {} · 남음 {}",

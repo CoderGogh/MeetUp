@@ -1,0 +1,94 @@
+package com.meetup.loader;
+
+import com.meetup.loader.OdsaySampleRepository.Sample;
+import com.meetup.loader.TravelTimeWriter.LoadedRoute;
+import com.meetup.place.Candidate;
+import com.meetup.place.PlaceRepository;
+import com.meetup.place.Station;
+import com.meetup.subway.GraphParams;
+import com.meetup.subway.SubwayGraph;
+import com.meetup.subway.SubwayGraph.Path;
+import com.meetup.subway.SubwaySources;
+import com.meetup.subway.TransferTimes;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/** 지하철 그래프로 역 × 후보지 행렬 계산. 외부 호출 없음 */
+public class GraphMatrixLoader {
+
+    private final PlaceRepository places;
+    private final TravelTimeWriter writer;
+    private final OdsaySampleRepository samples;
+    private final GraphParams params;
+
+    public GraphMatrixLoader(PlaceRepository places, TravelTimeWriter writer,
+            OdsaySampleRepository samples, GraphParams params) {
+        this.places = places;
+        this.writer = writer;
+        this.samples = samples;
+        this.params = params;
+    }
+
+    public GraphReport run() {
+        List<Station> stations = places.findStations();
+        List<Candidate> candidates = places.findCandidates();
+        Map<Integer, String> nameOf = new HashMap<>();
+        stations.forEach(s -> nameOf.put(s.id(), s.name()));
+        SubwayGraph graph = graph(stations);
+        List<LoadedRoute> rows = new ArrayList<>();
+        Map<LoadKey, Double> computed = new HashMap<>();
+        int outside = 0;
+        for (Station s : stations) {
+            if (graph.has(s.name())) {
+                Map<String, Path> paths = graph.shortestFrom(s.name(), params.initialWaitMinutes());
+                collect(s, paths, candidates, nameOf, rows, computed);
+            } else {
+                outside++;
+            }
+        }
+        writer.upsertGraph(rows);
+        return report(rows.size(), outside, graph.skipped(), computed);
+    }
+
+    // 한 출발역의 후보지별 결과 모음
+    private void collect(Station from, Map<String, Path> paths, List<Candidate> candidates,
+            Map<Integer, String> nameOf, List<LoadedRoute> rows, Map<LoadKey, Double> computed) {
+        for (Candidate c : candidates) {
+            Path p = paths.get(nameOf.get(c.stationId()));
+            if (p != null) {
+                LoadKey key = new LoadKey(from.id(), c.id());
+                int minutes = (int) Math.round(p.minutes());
+                rows.add(new LoadedRoute(key, new Route(minutes, p.transfers(), Route.Source.GRAPH)));
+                computed.put(key, p.minutes());
+            }
+        }
+    }
+
+    // 역 좌표로 그래프 구성 (소요시간 없는 구간 추정용)
+    private SubwayGraph graph(List<Station> stations) {
+        Map<String, double[]> coords = new HashMap<>();
+        for (Station s : stations) {
+            coords.put(s.name(), new double[] {s.lat(), s.lng()});
+        }
+        return SubwayGraph.build(SubwaySources.all(), coords, TransferTimes.load(), params);
+    }
+
+    // ODsay 실측 대비 절대 오차
+    private GraphReport report(int pairs, int outside, int skipped, Map<LoadKey, Double> computed) {
+        double sum = 0;
+        double max = 0;
+        int n = 0;
+        for (Sample s : samples.findAll()) {
+            Double g = computed.get(s.key());
+            if (g != null) {
+                double err = Math.abs(g - s.minutes());
+                sum += err;
+                max = Math.max(max, err);
+                n++;
+            }
+        }
+        return new GraphReport(pairs, outside, skipped, n, n == 0 ? 0 : sum / n, max);
+    }
+}

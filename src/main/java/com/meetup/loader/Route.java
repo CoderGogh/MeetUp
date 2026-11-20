@@ -6,6 +6,7 @@ public record Route(int minutes, int transfers, Source source) {
     /** 소요시간 출처 */
     public enum Source {
         ODSAY,
-        ESTIMATE
+        ESTIMATE,
+        GRAPH
     }
 }

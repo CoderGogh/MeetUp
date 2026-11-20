@@ -1,6 +1,7 @@
 package com.meetup.loader;
 
 import com.meetup.place.PlaceRepository;
+import com.meetup.subway.GraphParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,6 +30,12 @@ class LoaderConfig {
             StationWriter writer) {
         RestClient http = builder.baseUrl("http://openapi.seoul.go.kr:8088").build();
         return new SeoulStationImporter(new SeoulStationClient(http, props.seoulKey()), writer);
+    }
+
+    @Bean
+    GraphMatrixLoader graphMatrixLoader(PlaceRepository places, TravelTimeWriter writer,
+            OdsaySampleRepository samples) {
+        return new GraphMatrixLoader(places, writer, samples, GraphParams.DEFAULT);
     }
 
     @Bean
