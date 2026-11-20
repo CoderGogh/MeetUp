@@ -2,6 +2,7 @@ package com.meetup.room;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,5 +100,14 @@ class RoomApiTest {
         mvc.perform(get("/rooms/" + RoomCodes.generate()).header("X-Participant-Token", "x"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("ROOM_NOT_FOUND"));
         mvc.perform(get("/rooms/bad-code")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void expiredRoomIsGone() throws Exception {
+        JsonNode room = created();
+        String code = room.get("code").asText();
+        redis.opsForHash().put(RoomKeys.room(code), "expiresAt", String.valueOf(Instant.now().minusSeconds(1).toEpochMilli()));
+        mvc.perform(get("/rooms/" + code).header("X-Participant-Token", room.get("participantToken").asText()))
+                .andExpect(status().isGone()).andExpect(jsonPath("$.code").value("ROOM_EXPIRED"));
     }
 }
