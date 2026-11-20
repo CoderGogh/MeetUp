@@ -14,9 +14,14 @@ public record LoaderProperties(
         @DefaultValue("200ms") Duration delay,
         Duration refreshOlderThan,
         String stationsCsv,
-        String odsayKey) {
+        String odsayKey,
+        String seoulKey) {
 
     public boolean hasOdsayKey() {
         return odsayKey != null && !odsayKey.isBlank();
+    }
+
+    public boolean hasSeoulKey() {
+        return seoulKey != null && !seoulKey.isBlank();
     }
 }
