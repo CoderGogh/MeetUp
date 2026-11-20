@@ -9,9 +9,11 @@ import org.springframework.web.client.RestClient;
 
 import static com.meetup.loader.EstimateRouteClientTest.at;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class OdsayRouteClientTest {
@@ -34,5 +36,14 @@ class OdsayRouteClientTest {
                         MediaType.APPLICATION_JSON));
         assertThat(client.find(gangnam, at(2, 37.5133, 127.1001)).minutes()).isEqualTo(25);
         server.verify();
+    }
+
+    @Test
+    void httpErrorHidesKey() {
+        server.expect(requestTo(startsWith("https://api.odsay.com"))).andRespond(withServerError());
+        assertThatThrownBy(() -> client.find(gangnam, at(2, 37.5133, 127.1001)))
+                .isInstanceOf(RouteException.class)
+                .hasMessageContaining("500")
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain("secret"));
     }
 }
