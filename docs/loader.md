@@ -6,6 +6,7 @@
 
 ```bash
 docker compose up -d postgis
+set -a && . ./.env && set +a   # ODSAY_API_KEY 등
 ./gradlew bootRun --args='--spring.profiles.active=loader'
 ```
 
