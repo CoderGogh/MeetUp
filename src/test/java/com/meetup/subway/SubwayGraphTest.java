@@ -60,4 +60,13 @@ class SubwayGraphTest {
         assertThat(g.skipped()).isEqualTo(1);
         assertThat(g.has("가")).isFalse();
     }
+
+    @Test
+    void metroGraphConnectsAcrossLines() {
+        var g = SubwayGraph.build(SubwaySources.seoulMetro(), Map.of(), none, GraphParams.DEFAULT);
+        var paths = g.shortestFrom("강남", 0);
+        assertThat(paths.get("잠실").minutes()).isBetween(10.0, 20.0);
+        assertThat(paths.get("잠실").transfers()).isZero();
+        assertThat(paths.get("노원").transfers()).isPositive();
+    }
 }
