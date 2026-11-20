@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties("meetup.loader")
 public record LoaderProperties(
         @DefaultValue("false") boolean enabled,
-        @DefaultValue("1000") int dailyLimit,
+        @DefaultValue("0") int dailyLimit,
         @DefaultValue("3") int maxAttempts,
         @DefaultValue("20") int batchSize,
         @DefaultValue("200ms") Duration delay,
