@@ -109,4 +109,16 @@ class ParticipantJoinTest {
         RoomFixture.expire(redis, code);
         assertThat(failure(() -> join(code, "준호"))).isEqualTo(ErrorCode.ROOM_EXPIRED);
     }
+
+    @Test
+    void publishesJoinedEvent() {
+        String code = RoomFixture.room(rooms, 5).code();
+        join(code, "준호");
+        assertThat(events.stream(RoomEvent.class).filter(e -> e.code().equals(code)))
+                .singleElement().satisfies(e -> {
+                    assertThat(e.type()).isEqualTo("participant.joined");
+                    assertThat(e.roomRev()).isEqualTo(2);
+                    assertThat(e.payload()).containsEntry("count", 2);
+                });
+    }
 }
