@@ -34,4 +34,14 @@ public class ApiExceptionHandler {
         e.getBindingResult().getFieldErrors().forEach(f -> fields.put(f.getField(), f.getDefaultMessage()));
         return respond(ErrorCode.INVALID_REQUEST, ErrorCode.INVALID_REQUEST.message(), Map.of("fields", fields));
     }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    ResponseEntity<ErrorResponse> missingHeader(MissingRequestHeaderException e) {
+        return respond(ErrorCode.INVALID_REQUEST, "필수 헤더가 없습니다", Map.of("header", e.getHeaderName()));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ErrorResponse> unreadable(HttpMessageNotReadableException e) {
+        return respond(ErrorCode.INVALID_REQUEST, "요청 본문을 읽을 수 없습니다", Map.of());
+    }
 }
