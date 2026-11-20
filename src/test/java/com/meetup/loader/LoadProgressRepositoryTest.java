@@ -49,4 +49,15 @@ class LoadProgressRepositoryTest extends LoaderDbTest {
         assertThat(progress.next(10, 3)).isEmpty();
         assertThat(progress.remaining(3)).isZero();
     }
+
+    @Test
+    void requeuesStaleRows() {
+        progress.plan();
+        LoadKey key = progress.next(1, 3).get(0);
+        jdbc.update("UPDATE load_progress SET status = 'DONE'");
+        jdbc.update("INSERT INTO travel_time (station_id, candidate_id, minutes, source, updated_at) "
+                + "VALUES (?, ?, 30, 'ODSAY', now() - interval '400 days')", key.stationId(), key.candidateId());
+        assertThat(progress.requeueStale(Duration.ofDays(180))).isEqualTo(1);
+        assertThat(progress.next(10, 3)).containsExactly(key);
+    }
 }
