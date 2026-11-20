@@ -21,3 +21,15 @@ docker compose up -d postgis
 | `LOADER_DAILY_LIMIT` | 1000 | 1회 실행당 ODsay 호출 상한 (무료 쿼터 일 1,000건) |
 
 그 밖에 `--meetup.loader.max-attempts=3`(실패 재시도), `batch-size=20`, `delay=200ms`(호출 간격), `refresh-older-than=180d`(오래된 행 재조회)를 인자로 바꿀 수 있다.
+
+## 동작
+
+1. `station × candidate` 중 `load_progress`에 없는 조합만 `PENDING`으로 추가
+2. `PENDING` 먼저, 그다음 시도 횟수가 남은 `FAILED` 순으로 20개씩 조회
+3. 성공분은 `travel_time` upsert와 `DONE` 표시를 한 트랜잭션으로 저장
+4. 실패는 `FAILED`·시도 횟수·오류 코드만 남긴다. 인증키는 메시지에 넣지 않는다
+5. ODsay 호출이 한도에 닿으면 멈춘다
+
+같은 역은 0분, 700m 이내는 도보 시간으로 바로 채운다 (ODsay가 700m 이내를 지원하지 않음). 이 조합은 호출 수에 들어가지 않는다.
+
+중간에 죽으면 저장 전 배치(최대 20건)만 다시 부른다.
