@@ -52,4 +52,10 @@ class RoomTransitionsTest {
             assertThat(RoomTransitions.next(CONFIRMED, trigger)).isEmpty();
         }
     }
+
+    @Test
+    void onlyHostTriggersAreHostOnly() {
+        assertThat(START_VOTING.hostOnly()).isTrue();
+        assertThat(PARTICIPANT_CHANGED.hostOnly()).isFalse();
+    }
 }
