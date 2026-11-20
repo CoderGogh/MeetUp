@@ -39,4 +39,10 @@ class SubwayGraphTest {
                 new LineSegment("Y", "나", "다", 2.0));
         assertThat(g.shortestFrom("가", 0).get("다").minutes()).isEqualTo(1 + 3 + 2.0);
     }
+
+    @Test
+    void originIsZero() {
+        var g = graph(new LineSegment("X", "가", "나", 2.0));
+        assertThat(g.shortestFrom("가", 3).get("가").minutes()).isZero();
+    }
 }
