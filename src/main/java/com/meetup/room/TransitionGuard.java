@@ -3,6 +3,7 @@ package com.meetup.room;
 import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 
@@ -20,5 +21,18 @@ class TransitionGuard {
         Map<String, Object> details = new HashMap<>(where);
         details.putAll(why);
         return new ApiException(ErrorCode.PRECONDITION_FAILED, message, details);
+    }
+
+    // 참여자 2명 이상, 전원 출발지 입력
+    private void candidatesReady(Room room, Map<String, Object> where) {
+        List<Participant> ps = rooms.participants(room.code());
+        if (ps.size() < 2) {
+            throw fail("참여자가 2명 이상이어야 합니다", where, Map.of("reason", "MIN_PARTICIPANTS", "required", 2));
+        }
+        List<String> missing = ps.stream().filter(p -> !p.originSubmitted()).map(Participant::nickname).toList();
+        if (!missing.isEmpty()) {
+            throw fail("출발지를 입력하지 않은 참여자가 있습니다", where,
+                    Map.of("reason", "ORIGINS_MISSING", "missing", missing));
+        }
     }
 }
