@@ -1,6 +1,7 @@
 package com.meetup.loader;
 
 import com.meetup.place.Candidate;
+import com.meetup.place.Geo;
 import com.meetup.place.Station;
 
 /** 키 없는 환경용 추정 (직선거리 기반, 환승 미추정) */
