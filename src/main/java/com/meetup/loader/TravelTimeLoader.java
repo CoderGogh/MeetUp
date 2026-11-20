@@ -55,16 +55,31 @@ public class TravelTimeLoader {
                 ok.add(new LoadedRoute(key, route));
                 if (route.source() == Route.Source.ODSAY) {
                     t.calls++;
+                    pause();
                 }
             } catch (RouteException e) {
                 // 실패 조합은 기록만 하고 다음 조합 진행
                 progress.markFailed(key, e.getMessage());
                 t.failed++;
                 t.calls++;
+                pause();
             }
         }
         writer.save(ok);
         t.loaded += ok.size();
+    }
+
+    // 외부 API 호출 간격
+    private void pause() {
+        if (props.delay().isZero()) {
+            return;
+        }
+        try {
+            Thread.sleep(props.delay().toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("적재 중단", e);
+        }
     }
 
     private static <T> Map<Integer, T> byId(List<T> items, Function<T, Integer> id) {
