@@ -67,4 +67,10 @@ class RoomApiTest {
         mvc.perform(post("/rooms").contentType(MediaType.APPLICATION_JSON).content(BODY))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.details.header").value("Idempotency-Key"));
     }
+
+    @Test
+    void rejectsCapacityOverMax() throws Exception {
+        create(UUID.randomUUID().toString(), BODY.replace("5", "11")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.fields.capacity").exists());
+    }
 }
