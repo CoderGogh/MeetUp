@@ -44,4 +44,17 @@ public class ApiExceptionHandler {
     ResponseEntity<ErrorResponse> unreadable(HttpMessageNotReadableException e) {
         return respond(ErrorCode.INVALID_REQUEST, "요청 본문을 읽을 수 없습니다", Map.of());
     }
+
+    // 스프링 기본 오류 (경로 없음·메서드 불일치 등)
+    @ExceptionHandler(ServletException.class)
+    ResponseEntity<ErrorResponse> servlet(ServletException e) {
+        int status = e instanceof org.springframework.web.ErrorResponse r ? r.getStatusCode().value() : 500;
+        ErrorCode code = switch (status) {
+            case 404 -> ErrorCode.NOT_FOUND;
+            case 405 -> ErrorCode.METHOD_NOT_ALLOWED;
+            case 500 -> ErrorCode.INTERNAL;
+            default -> ErrorCode.INVALID_REQUEST;
+        };
+        return respond(code, code.message(), Map.of());
+    }
 }
