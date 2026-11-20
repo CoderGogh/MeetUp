@@ -12,6 +12,7 @@
 
 - [서비스 컨셉](docs/concept.md)
 - [기초 기획안](docs/plan.md)
+- [후보지 선정](docs/candidates.md)
 - [형상 관리 규칙](CONTRIBUTING.md)
 ## 실행
 
