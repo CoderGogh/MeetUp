@@ -59,4 +59,13 @@ class IdempotencyTest {
             return ResponseEntity.ok().build();
         });
     }
+
+    @Test
+    void failedRequestCanRetry() {
+        assertThatThrownBy(() -> idempotency.execute(scope, "key-00004", "a", ttl, () -> {
+            throw new ApiException(ErrorCode.ROOM_FULL);
+        })).isInstanceOf(ApiException.class);
+        call("key-00004", "a");
+        assertThat(runs.get()).isEqualTo(1);
+    }
 }
