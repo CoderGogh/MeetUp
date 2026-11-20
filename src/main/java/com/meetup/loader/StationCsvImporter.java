@@ -30,4 +30,12 @@ public class StationCsvImporter {
             return Files.readAllLines(csv, MS949);
         }
     }
+
+    private static String[] split(String line) {
+        String[] f = line.replace("﻿", "").split(",", -1);
+        for (int i = 0; i < f.length; i++) {
+            f[i] = f[i].trim().replaceAll("^\"|\"$", "");
+        }
+        return f;
+    }
 }
