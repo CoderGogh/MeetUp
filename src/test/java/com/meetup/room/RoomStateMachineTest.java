@@ -58,4 +58,10 @@ class RoomStateMachineTest {
         assertThat(failure(room(), RoomTrigger.CALCULATE_CANDIDATES, Actor.MEMBER).code())
                 .isEqualTo(ErrorCode.FORBIDDEN);
     }
+
+    @Test
+    void hostCannotFireSystemTrigger() {
+        assertThat(failure(room(), RoomTrigger.PARTICIPANT_CHANGED, Actor.HOST).code())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+    }
 }
