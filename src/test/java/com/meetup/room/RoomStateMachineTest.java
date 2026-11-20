@@ -2,6 +2,7 @@ package com.meetup.room;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetup.common.ApiException;
+import com.meetup.common.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,5 +51,11 @@ class RoomStateMachineTest {
         Transition t = machine.fire(code, RoomTrigger.START_VOTING, Actor.HOST);
         assertThat(t.state()).isEqualTo(RoomState.VOTING);
         assertThat(t.roomRev()).isEqualTo(2);
+    }
+
+    @Test
+    void memberCannotTransition() {
+        assertThat(failure(room(), RoomTrigger.CALCULATE_CANDIDATES, Actor.MEMBER).code())
+                .isEqualTo(ErrorCode.FORBIDDEN);
     }
 }
