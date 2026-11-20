@@ -1,0 +1,11 @@
+# 1회성 적재 실행: ./gradlew bootRun --args='--spring.profiles.active=loader'
+spring:
+  main:
+    web-application-type: none
+
+meetup:
+  loader:
+    enabled: true
+    odsay-key: ${ODSAY_API_KEY:}
+    stations-csv: ${STATIONS_CSV:}
+    daily-limit: ${LOADER_DAILY_LIMIT:1000}
