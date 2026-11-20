@@ -96,4 +96,13 @@ class RoomStateMachineTest {
         assertThat(machine.fire(code, RoomTrigger.CALCULATE_CANDIDATES, Actor.HOST).state())
                 .isEqualTo(RoomState.REVIEWING);
     }
+
+    @Test
+    void confirmNeedsLeader() {
+        String code = room();
+        RoomFixture.setState(redis, code, RoomState.VOTING);
+        assertThat(failure(code, RoomTrigger.CONFIRM, Actor.HOST).details()).containsEntry("reason", "NO_LEADER");
+        RoomFixture.decideLeader(redis, code);
+        assertThat(machine.fire(code, RoomTrigger.CONFIRM, Actor.HOST).state()).isEqualTo(RoomState.CONFIRMED);
+    }
 }
