@@ -66,4 +66,11 @@ class ParticipantJoinTest {
         assertThat(view.me()).isEqualTo(me.participantId());
         assertThat(view.participants()).extracting(RoomView.Member::nickname).containsExactly("방장", "준호");
     }
+
+    @Test
+    void rejectsDuplicateNicknameIgnoringCase() {
+        String code = RoomFixture.room(rooms, 5).code();
+        join(code, "Jun");
+        assertThat(failure(() -> join(code, "jun"))).isEqualTo(ErrorCode.NICKNAME_TAKEN);
+    }
 }
