@@ -22,4 +22,11 @@ class OdsayResponseTest {
                   {"info":{"totalTime":35,"busTransitCount":1,"subwayTransitCount":1}}]}}""");
         assertThat(r).isEqualTo(new Route(35, 1, Route.Source.ODSAY));
     }
+
+    @Test
+    void singleRideHasNoTransfer() throws Exception {
+        Route r = parse("""
+                {"result":{"path":[{"info":{"totalTime":20,"busTransitCount":0,"subwayTransitCount":1}}]}}""");
+        assertThat(r.transfers()).isZero();
+    }
 }
