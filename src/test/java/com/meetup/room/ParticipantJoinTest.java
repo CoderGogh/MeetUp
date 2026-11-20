@@ -15,6 +15,7 @@ import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -92,5 +93,13 @@ class ParticipantJoinTest {
     void concurrentSameNicknameOnlyOneWins() throws Exception {
         String code = RoomFixture.room(rooms, 10).code();
         assertThat(concurrently(code, 10, i -> "같은이름")).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsJoinWhileVoting() {
+        String code = RoomFixture.room(rooms, 5).code();
+        RoomFixture.setState(redis, code, RoomState.VOTING);
+        assertThatThrownBy(() -> join(code, "준호")).isInstanceOf(ApiException.class)
+                .extracting("details").asString().contains("VOTING");
     }
 }
