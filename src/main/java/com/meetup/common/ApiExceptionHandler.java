@@ -26,4 +26,12 @@ public class ApiExceptionHandler {
     ResponseEntity<ErrorResponse> api(ApiException e) {
         return respond(e.code(), e.getMessage(), e.details());
     }
+
+    // 필드별 검증 메시지
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<ErrorResponse> invalid(MethodArgumentNotValidException e) {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(f -> fields.put(f.getField(), f.getDefaultMessage()));
+        return respond(ErrorCode.INVALID_REQUEST, ErrorCode.INVALID_REQUEST.message(), Map.of("fields", fields));
+    }
 }
