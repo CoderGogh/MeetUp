@@ -61,4 +61,10 @@ class RoomApiTest {
         create(key, BODY).andExpect(status().isCreated()).andExpect(header().string("Idempotent-Replayed", "true"))
                 .andExpect(jsonPath("$.code").value(json.readTree(first).get("code").asText()));
     }
+
+    @Test
+    void requiresIdempotencyKey() throws Exception {
+        mvc.perform(post("/rooms").contentType(MediaType.APPLICATION_JSON).content(BODY))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.details.header").value("Idempotency-Key"));
+    }
 }
