@@ -39,4 +39,13 @@ class GraphMatrixLoaderTest extends LoaderDbTest {
         run();
         assertThat(minutes("강남", "강남")).isZero();
     }
+
+    @Test
+    void keepsOdsayMeasurement() {
+        jdbc.update("INSERT INTO travel_time (station_id, candidate_id, minutes, source) "
+                + "SELECT s.id, c.id, 13, 'ODSAY' FROM station s, candidate c WHERE s.name = '강남' AND c.name = '잠실'");
+        GraphReport r = run();
+        assertThat(minutes("강남", "잠실")).isEqualTo(13);
+        assertThat(r.samples()).isEqualTo(1);
+    }
 }
