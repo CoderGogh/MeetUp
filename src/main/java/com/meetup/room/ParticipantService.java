@@ -2,7 +2,9 @@ package com.meetup.room;
 
 import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
+import com.meetup.common.Hashes;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,5 +40,24 @@ public class ParticipantService {
             case "EXPIRED" -> new ApiException(ErrorCode.ROOM_EXPIRED);
             default -> new ApiException(ErrorCode.ROOM_NOT_FOUND);
         };
+    }
+
+    // 별명은 로그에 남기지 않음 (RFP 10.4)
+    public JoinedRoom join(String code, JoinRequest req) {
+        rooms.load(code);
+        Instant now = clock.instant();
+        String token = Tokens.generate();
+        Participant p = new Participant(Tokens.id(), Nicknames.clean(req.nickname()), false, false,
+                now.toEpochMilli());
+        JoinResult r = repo.join(code, p, Hashes.sha256(token), now);
+        if (!r.ok()) {
+            throw reject(r);
+        }
+        long rev = Long.parseLong(r.value());
+        int count = repo.participants(code).size();
+        events.publishEvent(new RoomEvent(code, rev, "participant.joined",
+                Map.of("nickname", p.nickname(), "count", count)));
+        log.info("room.joined code={} rev={} count={}", code, rev, count);
+        return new JoinedRoom(p.id(), token, rev);
     }
 }
