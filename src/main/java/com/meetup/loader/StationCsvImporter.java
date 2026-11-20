@@ -26,6 +26,23 @@ public class StationCsvImporter {
         this.jdbc = jdbc;
     }
 
+    public int importFrom(Path csv) throws IOException {
+        List<String> lines = read(csv);
+        Columns col = Columns.of(split(lines.get(0)));
+        Map<String, Row> rows = new LinkedHashMap<>();
+        for (String line : lines.subList(1, lines.size())) {
+            if (line.isBlank()) {
+                continue;
+            }
+            String[] f = split(line);
+            rows.computeIfAbsent(f[col.name()],
+                    n -> new Row(Double.parseDouble(f[col.lat()]), Double.parseDouble(f[col.lng()])))
+                    .lines.add(normalizeLine(f[col.line()]));
+        }
+        upsert(rows);
+        return rows.size();
+    }
+
     // 공공데이터 CSV는 MS949 인코딩이 많음
     private static List<String> read(Path csv) throws IOException {
         try {
