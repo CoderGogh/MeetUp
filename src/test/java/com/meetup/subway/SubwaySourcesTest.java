@@ -18,4 +18,12 @@ class SubwaySourcesTest {
         // 279행 - 노선 시작 8행
         assertThat(metro).hasSize(271).allMatch(s -> s.minutes() != null && s.minutes() > 0);
     }
+
+    @Test
+    void branchesStartFromJunction() {
+        assertThat(linked(metro, "2호선", "성수", "용답")).isTrue();
+        assertThat(linked(metro, "2호선", "신도림", "도림천")).isTrue();
+        assertThat(linked(metro, "5호선", "강동", "둔촌동")).isTrue();
+        assertThat(linked(metro, "2호선", "시청", "용답")).isFalse();
+    }
 }
