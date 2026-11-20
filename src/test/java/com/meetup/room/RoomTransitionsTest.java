@@ -27,4 +27,11 @@ class RoomTransitionsTest {
         assertThat(RoomTransitions.next(REVIEWING, PARTICIPANT_CHANGED)).contains(COLLECTING);
         assertThat(RoomTransitions.next(VOTING, RESET_INPUT)).contains(COLLECTING);
     }
+
+    @Test
+    void rejectsSkippingSteps() {
+        assertThat(RoomTransitions.next(COLLECTING, START_VOTING)).isEmpty();
+        assertThat(RoomTransitions.next(COLLECTING, CONFIRM)).isEmpty();
+        assertThat(RoomTransitions.next(REVIEWING, CONFIRM)).isEmpty();
+    }
 }
