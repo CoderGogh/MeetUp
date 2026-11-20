@@ -63,4 +63,14 @@ class OdsayRouteClientTest {
         assertThatThrownBy(() -> client.find(gangnam, at(2, 37.5133, 127.1001)))
                 .isInstanceOf(QuotaExceededException.class);
     }
+
+    @Test
+    void exhaustedBudgetSendsNoRequest() {
+        var noBudget = new OdsayRouteClient(builder.build(), KEY, () -> {
+            throw new QuotaExceededException("ODsay 월 호출 한도 30건 소진");
+        });
+        assertThatThrownBy(() -> noBudget.find(gangnam, at(2, 37.5133, 127.1001)))
+                .isInstanceOf(QuotaExceededException.class);
+        server.verify();
+    }
 }
