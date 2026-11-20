@@ -2,6 +2,7 @@ package com.meetup.room;
 
 import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
+import com.meetup.common.Hashes;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Optional;
@@ -38,5 +39,14 @@ public class RoomService {
             throw new ApiException(ErrorCode.ROOM_EXPIRED, Map.of("expiredAt", room.expiresAt().toString()));
         }
         return room;
+    }
+
+    // 참여자 토큰 → 참여자 ID. 없거나 틀리면 401
+    String authenticate(String code, String participantToken) {
+        if (participantToken == null || participantToken.isBlank()) {
+            throw new ApiException(ErrorCode.UNAUTHORIZED);
+        }
+        return rooms.participantIdByToken(code, Hashes.sha256(participantToken))
+                .orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
     }
 }
