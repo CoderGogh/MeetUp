@@ -18,7 +18,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 class OdsayRouteClientTest {
 
-    static final String KEY = "secret+key/123";
+    static final String KEY = "dummy+/";
 
     final RestClient.Builder builder = RestClient.builder().baseUrl("https://api.odsay.com");
     final MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -30,7 +30,7 @@ class OdsayRouteClientTest {
         server.expect(requestTo(startsWith("https://api.odsay.com/v1/api/searchPubTransPathT")))
                 .andExpect(queryParam("SX", "127.0276"))
                 .andExpect(queryParam("EY", "37.5133"))
-                .andExpect(queryParam("apiKey", "secret%2Bkey%2F123"))
+                .andExpect(queryParam("apiKey", "dummy%2B%2F"))
                 .andRespond(withSuccess("""
                         {"result":{"path":[{"info":{"totalTime":25,"subwayTransitCount":1}}]}}""",
                         MediaType.APPLICATION_JSON));
@@ -44,7 +44,7 @@ class OdsayRouteClientTest {
         assertThatThrownBy(() -> client.find(gangnam, at(2, 37.5133, 127.1001)))
                 .isInstanceOf(RouteException.class)
                 .hasMessageContaining("500")
-                .satisfies(e -> assertThat(e.getMessage()).doesNotContain("secret"));
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain("dummy"));
     }
 
     @Test
