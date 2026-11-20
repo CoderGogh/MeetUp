@@ -1,6 +1,10 @@
 package com.meetup.room;
 
+import com.meetup.common.ApiException;
+import com.meetup.common.ErrorCode;
 import java.time.Clock;
+import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,5 +28,15 @@ public class RoomService {
 
     String inviteUrl(String code) {
         return props.inviteBaseUrl() + "/r/" + code;
+    }
+
+    // 없는 방 404, 만료된 방 410
+    Room load(String code) {
+        Room room = (RoomCodes.isValid(code) ? rooms.find(code) : Optional.<Room>empty())
+                .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
+        if (room.stateAt(clock.instant()) == RoomState.EXPIRED) {
+            throw new ApiException(ErrorCode.ROOM_EXPIRED, Map.of("expiredAt", room.expiresAt().toString()));
+        }
+        return room;
     }
 }
