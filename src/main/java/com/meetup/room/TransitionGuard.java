@@ -42,4 +42,14 @@ class TransitionGuard {
             throw fail("득표 1위가 정해지지 않았습니다", where, Map.of("reason", "NO_LEADER"));
         }
     }
+
+    void check(Room room, RoomTrigger trigger, Map<String, Object> where) {
+        switch (trigger) {
+            case CALCULATE_CANDIDATES -> candidatesReady(room, where);
+            case CONFIRM -> leaderDecided(room, where);
+            default -> {
+                // 조건 없음
+            }
+        }
+    }
 }
