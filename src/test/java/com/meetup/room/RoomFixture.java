@@ -1,5 +1,7 @@
 package com.meetup.room;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.meetup.place.Theme;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
@@ -19,5 +21,18 @@ final class RoomFixture {
 
     static void expire(StringRedisTemplate redis, String code) {
         redis.opsForHash().put(RoomKeys.room(code), "expiresAt", String.valueOf(System.currentTimeMillis() - 1000));
+    }
+
+    // 전원 출발지 입력 완료로 표시 (출발지 입력은 4주차)
+    static void submitOrigins(StringRedisTemplate redis, ObjectMapper json, String code) throws Exception {
+        for (var e : redis.opsForHash().entries(RoomKeys.participants(code)).entrySet()) {
+            ObjectNode p = (ObjectNode) json.readTree(e.getValue().toString());
+            p.put("originSubmitted", true);
+            redis.opsForHash().put(RoomKeys.participants(code), e.getKey(), p.toString());
+        }
+    }
+
+    static void decideLeader(StringRedisTemplate redis, String code) {
+        redis.opsForHash().put(RoomKeys.room(code), "leaderDecided", "1");
     }
 }
