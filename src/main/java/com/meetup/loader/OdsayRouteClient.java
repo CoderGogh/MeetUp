@@ -15,10 +15,12 @@ public class OdsayRouteClient implements RouteClient {
 
     private final RestClient http;
     private final String apiKey;
+    private final CallBudget budget;
 
-    public OdsayRouteClient(RestClient http, String apiKey) {
+    public OdsayRouteClient(RestClient http, String apiKey, CallBudget budget) {
         this.http = http;
         this.apiKey = apiKey;
+        this.budget = budget;
     }
 
     @Override
@@ -32,6 +34,8 @@ public class OdsayRouteClient implements RouteClient {
     }
 
     private JsonNode call(Station from, Candidate to) {
+        // 월 한도를 넘으면 요청을 보내지 않음
+        budget.acquire();
         try {
             JsonNode body = http.get()
                     .uri(PATH, from.lng(), from.lat(), to.lng(), to.lat(), apiKey)

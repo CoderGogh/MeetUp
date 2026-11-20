@@ -25,12 +25,12 @@ class LoaderConfig {
     }
 
     @Bean
-    RouteClient routeClient(LoaderProperties props, RestClient.Builder builder) {
+    RouteClient routeClient(LoaderProperties props, RestClient.Builder builder, MonthlyCallBudget budget) {
         if (!props.hasOdsayKey()) {
             log.info("ODsay 키 없음 → 추정 모드 (source=ESTIMATE)");
             return new EstimateRouteClient();
         }
-        return new OdsayRouteClient(builder.baseUrl("https://api.odsay.com").build(), props.odsayKey());
+        return new OdsayRouteClient(builder.baseUrl("https://api.odsay.com").build(), props.odsayKey(), budget);
     }
 
     @Bean

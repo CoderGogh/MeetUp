@@ -24,7 +24,7 @@ class OdsayRouteClientTest {
 
     final RestClient.Builder builder = RestClient.builder().baseUrl("https://api.odsay.com");
     final MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-    final OdsayRouteClient client = new OdsayRouteClient(builder.build(), KEY);
+    final OdsayRouteClient client = new OdsayRouteClient(builder.build(), KEY, CallBudget.UNLIMITED);
     final Station gangnam = new Station(1, "강남", List.of("2호선"), 37.4979, 127.0276);
 
     @Test
