@@ -78,4 +78,13 @@ class RoomStateMachineTest {
         assertThat(e.code()).isEqualTo(ErrorCode.PRECONDITION_FAILED);
         assertThat(e.details()).containsEntry("reason", "MIN_PARTICIPANTS");
     }
+
+    @Test
+    void listsParticipantsWithoutOrigin() {
+        String code = room();
+        participants.join(code, new JoinRequest("준호"));
+        ApiException e = failure(code, RoomTrigger.CALCULATE_CANDIDATES, Actor.HOST);
+        assertThat(e.details()).containsEntry("reason", "ORIGINS_MISSING");
+        assertThat(e.details().get("missing").toString()).contains("방장", "준호");
+    }
 }
