@@ -29,3 +29,5 @@ meetup:
     ttl: ${ROOM_TTL:PT6H}
     confirmed-ttl: ${ROOM_CONFIRMED_TTL:PT24H}
     max-participants: 10
+    expired-grace: PT1H
+    invite-base-url: ${INVITE_BASE_URL:http://localhost:8080}

@@ -30,3 +30,22 @@
 - 같은 키를 다른 내용의 요청에 쓰면 422, 처음 요청을 아직 처리 중이면 409
 - 처리 중 오류가 나면 키를 풀어서 같은 키로 다시 보낼 수 있다
 - 보존 기간은 방 TTL을 넘지 않는다. 결과를 저장할 때도 처음 잡은 만료 시각을 유지한다
+
+## 방
+
+| 메서드 | 경로 | 헤더 | 응답 |
+|---|---|---|---|
+| POST | `/rooms` | `Idempotency-Key` | 201 `{code, inviteUrl, state, roomRev, expiresAt, participantId, participantToken, hostToken}` |
+| GET | `/rooms/{code}` | `X-Participant-Token` | 200 `{code, theme, capacity, state, roomRev, expiresAt, inviteUrl, me, participants[]}` |
+
+생성 요청: `{"theme": "CASUAL", "capacity": 5, "nickname": "민지"}`. 테마는 `MEETING` `TALK` `CASUAL` `DATE` `INDOOR`, 정원 2~10, 별명 1~12자.
+
+- 방장은 만든 순간 첫 참여자로 들어간다. 참여자 토큰과 방장 토큰을 따로 받는다
+- 방 코드는 헷갈리는 글자를 뺀 31자 중 12자 (약 59비트). 순차 증가하지 않는다
+
+**만료와 저장**
+
+- 방은 생성 후 6시간(`ROOM_TTL`)에 만료. 만료 뒤 1시간은 조회하면 410 `ROOM_EXPIRED`, 그 뒤 키가 지워지면 404
+- Redis 키 `room:{코드}`, `:participants`, `:nicknames`, `:tokens` 네 개가 같은 TTL로 함께 사라진다
+- 토큰은 SHA-256 해시만 저장한다. 원문은 생성·입장 응답에만 실린다
+- 단, 재전송에 같은 응답을 돌려주려고 그 응답 본문(토큰 포함)을 멱등성 기록에 보존 기간 동안 둔다. 보존 기간은 방 TTL 이하
