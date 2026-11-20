@@ -44,4 +44,12 @@ class TransitionApiTest {
         mvc.perform(fire(room.code(), key, "START_VOTING").header("X-Host-Token", room.hostToken()))
                 .andExpect(status().isOk()).andExpect(header().string("Idempotent-Replayed", "true"));
     }
+
+    @Test
+    void memberIsForbidden() throws Exception {
+        CreatedRoom room = RoomFixture.room(rooms, 5);
+        mvc.perform(fire(room.code(), UUID.randomUUID().toString(), "CALCULATE_CANDIDATES")
+                        .header("X-Participant-Token", room.participantToken()))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.details.currentState").value("COLLECTING"));
+    }
 }
