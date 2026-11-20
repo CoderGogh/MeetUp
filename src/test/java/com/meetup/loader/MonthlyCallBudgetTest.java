@@ -3,6 +3,10 @@ package com.meetup.loader;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,5 +56,25 @@ class MonthlyCallBudgetTest extends LoaderDbTest {
     void zeroLimitNeverCalls() {
         assertThatThrownBy(budget(0, nov)::acquire).isInstanceOf(QuotaExceededException.class);
         assertThat(budget(0, nov).used()).isZero();
+    }
+
+    @Test
+    void concurrentAcquireNeverExceedsLimit() throws Exception {
+        var b = budget(5, nov);
+        var ok = new AtomicInteger();
+        var pool = Executors.newFixedThreadPool(10);
+        var tasks = IntStream.range(0, 20).<Callable<Void>>mapToObj(i -> () -> {
+            try {
+                b.acquire();
+                ok.incrementAndGet();
+            } catch (QuotaExceededException e) {
+                // 한도 초과
+            }
+            return null;
+        }).toList();
+        pool.invokeAll(tasks);
+        pool.shutdown();
+        assertThat(ok.get()).isEqualTo(5);
+        assertThat(b.used()).isEqualTo(5);
     }
 }
