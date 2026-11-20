@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetup.place.Theme;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.core.io.ClassPathResource;
@@ -61,5 +63,15 @@ public class RoomRepository {
                 Integer.parseInt((String) h.get("capacity")), RoomState.valueOf((String) h.get("state")),
                 Long.parseLong((String) h.get("rev")), Instant.ofEpochMilli(Long.parseLong((String) h.get("createdAt"))),
                 Instant.ofEpochMilli(Long.parseLong((String) h.get("expiresAt"))), (String) h.get("hostTokenHash")));
+    }
+
+    // 입장 순
+    public List<Participant> participants(String code) {
+        return redis.opsForHash().values(RoomKeys.participants(code)).stream().map(this::read)
+                .sorted(Comparator.comparingLong(Participant::joinedAt)).toList();
+    }
+
+    public Optional<String> participantIdByToken(String code, String tokenHash) {
+        return Optional.ofNullable((String) redis.opsForHash().get(RoomKeys.tokens(code), tokenHash));
     }
 }
