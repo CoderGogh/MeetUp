@@ -92,4 +92,16 @@ public class Idempotency {
             throw e;
         }
     }
+
+    /** scope 안에서 key를 선점한 요청만 action 실행. 보존 기간 ttl은 방 TTL 이하로 넘김 */
+    public ResponseEntity<Object> execute(String scope, String key, String fingerprint, Duration ttl,
+            Supplier<ResponseEntity<?>> action) {
+        if (key == null || !KEY.matcher(key).matches()) {
+            throw new ApiException(ErrorCode.INVALID_REQUEST, "요청 키 형식이 올바르지 않습니다",
+                    Map.of("header", HEADER, "pattern", KEY.pattern()));
+        }
+        String redisKey = "idem:{" + scope + "}:" + key;
+        Boolean first = redis.opsForValue().setIfAbsent(redisKey, write(IdempotencyRecord.pending(fingerprint)), ttl);
+        return Boolean.TRUE.equals(first) ? run(redisKey, fingerprint, action) : replay(redisKey, fingerprint);
+    }
 }
