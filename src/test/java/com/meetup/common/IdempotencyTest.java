@@ -68,4 +68,11 @@ class IdempotencyTest {
         call("key-00004", "a");
         assertThat(runs.get()).isEqualTo(1);
     }
+
+    @Test
+    void rejectsMalformedKey() {
+        assertThatThrownBy(() -> call("short", "a")).isInstanceOf(ApiException.class)
+                .extracting("code").isEqualTo(ErrorCode.INVALID_REQUEST);
+        assertThatThrownBy(() -> call(null, "a")).isInstanceOf(ApiException.class);
+    }
 }
