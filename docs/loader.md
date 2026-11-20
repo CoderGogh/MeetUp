@@ -49,3 +49,18 @@ UPDATE load_progress p SET status = 'PENDING', attempts = 0
 FROM travel_time t
 WHERE t.station_id = p.station_id AND t.candidate_id = p.candidate_id AND t.source = 'ESTIMATE';
 ```
+
+## 기준역 CSV
+
+한 행이 역 × 노선이다. 같은 역명은 노선을 합쳐 1행으로 넣고, 이미 있는 역은 노선·좌표를 덮어쓴다.
+
+```csv
+name,line,lat,lng
+강남,2호선,37.4979,127.0276
+강남,신분당선,37.4979,127.0276
+```
+
+- 헤더는 영문(`name` `line` `lat` `lng`)이나 공공데이터 한글 헤더(`역사명` `호선` `위도` `경도`) 둘 다 읽는다
+- UTF-8, MS949 모두 읽는다. `01호선`은 `1호선`으로 바꾼다
+- 서울 열린데이터광장 "서울시 역사마스터 정보" CSV를 그대로 넣을 수 있다. MVP 범위(약 300역)에 맞게 노선을 거른 뒤 넣는다
+- 역명은 후보 기준역 시드(`V6`)와 같아야 같은 역으로 합쳐진다
