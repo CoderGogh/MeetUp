@@ -34,9 +34,13 @@ class TravelTimeLoaderTest extends LoaderDbTest {
 
         final List<LoadKey> calls = new ArrayList<>();
         final Set<Integer> failing = new HashSet<>();
+        int quotaAfter = Integer.MAX_VALUE;
 
         @Override
         public Route find(Station from, Candidate to) {
+            if (calls.size() >= quotaAfter) {
+                throw new QuotaExceededException("ODsay 호출 한도 초과");
+            }
             calls.add(new LoadKey(from.id(), to.id()));
             if (failing.contains(to.id())) {
                 throw new RouteException("ODsay HTTP 500");
@@ -77,5 +81,15 @@ class TravelTimeLoaderTest extends LoaderDbTest {
         loader(5).run();
         assertThat(jdbc.queryForList("SELECT DISTINCT source FROM travel_time", String.class))
                 .containsExactly("ODSAY");
+    }
+
+    @Test
+    void stopsOnQuotaWithoutFailingRest() {
+        fake.quotaAfter = 30;
+        LoadReport r = loader(1000).run();
+        assertThat(r.quotaExceeded()).isTrue();
+        assertThat(r.loaded()).isEqualTo(30);
+        assertThat(count("SELECT count(*) FROM load_progress WHERE status = 'FAILED'")).isZero();
+        assertThat(r.remaining()).isEqualTo(pairs() - 30);
     }
 }
