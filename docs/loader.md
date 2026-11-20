@@ -51,6 +51,15 @@ FROM travel_time t
 WHERE t.station_id = p.station_id AND t.candidate_id = p.candidate_id AND t.source = 'ESTIMATE';
 ```
 
+## 기준역 (서울시 역사마스터)
+
+`SEOUL_OPENAPI_KEY`가 있으면 실행할 때 [역사마스터 정보](https://data.seoul.go.kr/dataList/OA-21232/S/1/datasetView.do) Open API(784행)를 받아 기준역부터 넣는다.
+
+- 그래프(`docs/subway-data.md`)에 있는 역·노선만 넣는다. 지금 301역
+- 역명은 괄호를 빼고 개명 역은 새 이름으로 맞춘다 (`당고개`→`불암산`, `뚝섬유원지`→`자양`, `이수`→`총신대입구`)
+- 노선은 그래프 노선명으로 적는다 (`경부선`·`경원선` → `1호선`, `분당선` → `수인분당선`)
+- 키는 URL 경로에 들어간다. 오류 메시지에는 HTTP 상태와 `INFO-100` 같은 결과 코드만 남긴다
+
 ## 기준역 CSV
 
 한 행이 역 × 노선이다. 같은 역명은 노선을 합쳐 1행으로 넣고, 이미 있는 역은 노선·좌표를 덮어쓴다.
