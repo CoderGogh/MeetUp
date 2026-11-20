@@ -18,6 +18,15 @@ public final class SubwayGraph {
     private SubwayGraph() {
     }
 
+    public boolean has(String station) {
+        return byStation.containsKey(station);
+    }
+
+    // 좌표가 없어 못 넣은 구간 수
+    public int skipped() {
+        return skipped;
+    }
+
     private int node(String station, String line) {
         return index.computeIfAbsent(station + ":" + line, k -> {
             stationOf.add(station);
