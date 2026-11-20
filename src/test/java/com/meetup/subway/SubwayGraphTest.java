@@ -45,4 +45,12 @@ class SubwayGraphTest {
         var g = graph(new LineSegment("X", "가", "나", 2.0));
         assertThat(g.shortestFrom("가", 3).get("가").minutes()).isZero();
     }
+
+    @Test
+    void estimatesSegmentFromCoordinates() {
+        // 위도 0.009도 ≈ 1km → 60km/h에서 1분
+        var g = SubwayGraph.build(List.of(new LineSegment("X", "가", "나", null)),
+                Map.of("가", new double[] {37.5, 127.0}, "나", new double[] {37.509, 127.0}), none, p);
+        assertThat(g.shortestFrom("가", 0).get("나").minutes()).isCloseTo(1.0, within(0.01));
+    }
 }
