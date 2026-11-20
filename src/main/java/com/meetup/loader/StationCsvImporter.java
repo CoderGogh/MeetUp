@@ -65,13 +65,13 @@ public class StationCsvImporter {
                 .toList());
     }
 
-    /** 헤더 위치 (영문·공공데이터 한글 헤더 모두 허용) */
+    /** 헤더 위치 (영문·한글·서울시 API 필드명 허용) */
     private record Columns(int name, int line, int lat, int lng) {
 
         static Columns of(String[] header) {
             List<String> h = List.of(header);
-            return new Columns(find(h, "name", "역사명", "역명"), find(h, "line", "호선", "노선명"),
-                    find(h, "lat", "위도"), find(h, "lng", "경도"));
+            return new Columns(find(h, "name", "역사명", "역명", "BLDN_NM"), find(h, "line", "호선", "노선명", "ROUTE"),
+                    find(h, "lat", "위도", "LAT"), find(h, "lng", "경도", "LOT"));
         }
 
         private static int find(List<String> header, String... names) {
