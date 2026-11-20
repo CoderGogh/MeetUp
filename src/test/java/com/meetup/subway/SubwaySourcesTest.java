@@ -32,4 +32,13 @@ class SubwaySourcesTest {
         assertThat(linked(metro, "2호선", "충정로", "시청")).isTrue();
         assertThat(linked(metro, "6호선", "구산", "응암")).isTrue();
     }
+
+    @Test
+    void readsExtraLinesWithoutTimes() {
+        var extra = SubwaySources.extraLines();
+        // 114행 - 구간 시작 9행
+        assertThat(extra).hasSize(105).allMatch(s -> s.minutes() == null);
+        assertThat(linked(extra, "9호선", "여의도", "샛강")).isTrue();
+        assertThat(linked(extra, "1호선", "구로", "가산디지털단지")).isTrue();
+    }
 }
