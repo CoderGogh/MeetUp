@@ -46,4 +46,11 @@ class OdsayRouteClientTest {
                 .hasMessageContaining("500")
                 .satisfies(e -> assertThat(e.getMessage()).doesNotContain("secret"));
     }
+
+    @Test
+    void nearbySkipsCall() {
+        Route r = client.find(gangnam, at(1, 37.4979, 127.0276));
+        assertThat(r.source()).isEqualTo(Route.Source.ESTIMATE);
+        server.verify();
+    }
 }
