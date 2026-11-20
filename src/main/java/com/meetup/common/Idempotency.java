@@ -29,4 +29,20 @@ public class Idempotency {
         this.redis = redis;
         this.json = json;
     }
+
+    private String write(IdempotencyRecord record) {
+        try {
+            return json.writeValueAsString(record);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private IdempotencyRecord read(String stored) {
+        try {
+            return json.readValue(stored, IdempotencyRecord.class);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }
