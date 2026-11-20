@@ -14,4 +14,9 @@ class TransferTimesTest {
         // 강남 2호선 → 신분당선 02:58
         assertThat(transfers.walk("강남", "2호선", "신분당선")).isCloseTo(2.97, within(0.01));
     }
+
+    @Test
+    void usesReverseDirectionWhenMissing() {
+        assertThat(transfers.walk("강남", "신분당선", "2호선")).isCloseTo(2.97, within(0.01));
+    }
 }
