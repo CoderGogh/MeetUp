@@ -16,6 +16,7 @@ import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -145,5 +146,17 @@ class RoomStateMachineTest {
         JoinedRoom joined = participants.join(code, new JoinRequest("준호"));
         assertThat(rooms.find(code).state()).isEqualTo(RoomState.COLLECTING);
         assertThat(joined.roomRev()).isEqualTo(3);
+    }
+
+    @Test
+    void publishesStateChanged() {
+        String code = room();
+        RoomFixture.setState(redis, code, RoomState.REVIEWING);
+        machine.fire(code, RoomTrigger.START_VOTING, Actor.HOST);
+        assertThat(events.stream(RoomEvent.class).filter(e -> e.code().equals(code)))
+                .singleElement().satisfies(e -> {
+                    assertThat(e.type()).isEqualTo("state.changed");
+                    assertThat(e.payload()).containsEntry("from", "REVIEWING").containsEntry("to", "VOTING");
+                });
     }
 }
