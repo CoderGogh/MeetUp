@@ -4,6 +4,7 @@ import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
 import java.time.Clock;
 import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -51,5 +52,17 @@ public class RoomStateMachine {
                 Map.of("from", from.name(), "to", to.name())));
         log.info("room.transition code={} trigger={} from={} to={} rev={}", code, trigger, from, to, cas.rev());
         return new Transition(from, to, cas.rev());
+    }
+
+    public Transition fire(String code, RoomTrigger trigger, Actor actor) {
+        Room room = (RoomCodes.isValid(code) ? rooms.find(code) : Optional.<Room>empty())
+                .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
+        RoomState current = room.stateAt(clock.instant());
+        Map<String, Object> where = Map.of("currentState", current.name(), "roomRev", room.rev());
+        authorize(trigger, actor, where);
+        RoomState next = RoomTransitions.next(current, trigger)
+                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_TRANSITION, where));
+        guard.check(room, trigger, where);
+        return apply(code, trigger, current, next);
     }
 }
