@@ -28,6 +28,20 @@ public class TravelTimeLoader {
         this.props = props;
     }
 
+    // 배치 조회 후 한 번에 저장
+    private void load(List<LoadKey> batch, Tally t) {
+        List<LoadedRoute> ok = new ArrayList<>();
+        for (LoadKey key : batch) {
+            Route route = client.find(t.stations.get(key.stationId()), t.candidates.get(key.candidateId()));
+            ok.add(new LoadedRoute(key, route));
+            if (route.source() == Route.Source.ODSAY) {
+                t.calls++;
+            }
+        }
+        writer.save(ok);
+        t.loaded += ok.size();
+    }
+
     private static <T> Map<Integer, T> byId(List<T> items, Function<T, Integer> id) {
         return items.stream().collect(Collectors.toMap(id, Function.identity()));
     }
