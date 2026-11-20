@@ -45,4 +45,10 @@ class SeoulStationImporterTest extends LoaderDbTest {
         assertThat(lat).isEqualTo(37.497952);
         assertThat(lines("강남")).isEqualTo("2호선,신분당선");
     }
+
+    @Test
+    void graphCoversEveryCandidate() {
+        var graph = SeoulStationImporter.graphLines().keySet();
+        assertThat(jdbc.queryForList("SELECT name FROM candidate", String.class)).allMatch(graph::contains);
+    }
 }
