@@ -29,4 +29,11 @@ class OdsayResponseTest {
                 {"result":{"path":[{"info":{"totalTime":20,"busTransitCount":0,"subwayTransitCount":1}}]}}""");
         assertThat(r.transfers()).isZero();
     }
+
+    @Test
+    void errorObjectThrows() {
+        assertThatThrownBy(() -> parse("""
+                {"error":{"code":"-98","msg":"출, 도착지가 700m이내입니다."}}"""))
+                .isInstanceOf(RouteException.class).hasMessageContaining("-98");
+    }
 }
