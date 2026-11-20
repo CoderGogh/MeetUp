@@ -1,5 +1,7 @@
 package com.meetup.room;
 
+import com.meetup.common.ApiException;
+import com.meetup.common.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,5 +25,14 @@ class ParticipantJoinTest {
 
     JoinedRoom join(String code, String nickname) {
         return participants.join(code, new JoinRequest(nickname));
+    }
+
+    ErrorCode failure(Runnable action) {
+        try {
+            action.run();
+            return null;
+        } catch (ApiException e) {
+            return e.code();
+        }
     }
 }
