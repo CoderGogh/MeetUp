@@ -15,6 +15,12 @@ public final class RoomTransitions {
         allow(RoomState.REVIEWING, RoomTrigger.PARTICIPANT_CHANGED, RoomState.COLLECTING);
         allow(RoomState.VOTING, RoomTrigger.RESET_INPUT, RoomState.COLLECTING);
         allow(RoomState.VOTING, RoomTrigger.CONFIRM, RoomState.CONFIRMED);
+        // 만료는 EXPIRED 외 모든 단계에서
+        for (RoomState s : RoomState.values()) {
+            if (s != RoomState.EXPIRED) {
+                allow(s, RoomTrigger.EXPIRE, RoomState.EXPIRED);
+            }
+        }
     }
 
     private RoomTransitions() {
