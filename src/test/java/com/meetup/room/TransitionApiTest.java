@@ -71,4 +71,11 @@ class TransitionApiTest {
                 .andExpect(jsonPath("$.details.currentState").value("COLLECTING"))
                 .andExpect(jsonPath("$.details.roomRev").value(1));
     }
+
+    @Test
+    void unknownTriggerIsBadRequest() throws Exception {
+        CreatedRoom room = RoomFixture.room(rooms, 5);
+        mvc.perform(fire(room.code(), UUID.randomUUID().toString(), "TELEPORT")
+                .header("X-Host-Token", room.hostToken())).andExpect(status().isBadRequest());
+    }
 }
