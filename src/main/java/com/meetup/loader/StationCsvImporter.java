@@ -6,7 +6,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -56,6 +58,24 @@ public class StationCsvImporter {
                 }
             }
             throw new IllegalArgumentException("CSV 헤더 없음: " + names[0]);
+        }
+    }
+
+    // 01호선 → 1호선
+    private static String normalizeLine(String line) {
+        return line.replaceFirst("^0(\\d)", "$1");
+    }
+
+    /** 역 하나 (노선 병합) */
+    private static final class Row {
+
+        final double lat;
+        final double lng;
+        final Set<String> lines = new LinkedHashSet<>();
+
+        Row(double lat, double lng) {
+            this.lat = lat;
+            this.lng = lng;
         }
     }
 }
