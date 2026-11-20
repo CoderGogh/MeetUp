@@ -53,4 +53,11 @@ class SubwayGraphTest {
                 Map.of("가", new double[] {37.5, 127.0}, "나", new double[] {37.509, 127.0}), none, p);
         assertThat(g.shortestFrom("가", 0).get("나").minutes()).isCloseTo(1.0, within(0.01));
     }
+
+    @Test
+    void skipsSegmentWithoutCoordinates() {
+        var g = graph(new LineSegment("X", "가", "나", null));
+        assertThat(g.skipped()).isEqualTo(1);
+        assertThat(g.has("가")).isFalse();
+    }
 }
