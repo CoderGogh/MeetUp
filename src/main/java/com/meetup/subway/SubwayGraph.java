@@ -18,6 +18,16 @@ public final class SubwayGraph {
     private SubwayGraph() {
     }
 
+    private int node(String station, String line) {
+        return index.computeIfAbsent(station + ":" + line, k -> {
+            stationOf.add(station);
+            lineOf.add(line);
+            adj.add(new ArrayList<>());
+            byStation.computeIfAbsent(station, s -> new ArrayList<>()).add(stationOf.size() - 1);
+            return stationOf.size() - 1;
+        });
+    }
+
     private void link(int a, int b, double minutes, int transfers) {
         adj.get(a).add(new Edge(b, minutes, transfers));
     }
