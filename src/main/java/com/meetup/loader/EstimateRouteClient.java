@@ -9,7 +9,7 @@ public class EstimateRouteClient implements RouteClient {
     static final double WALK_KM = 0.7;
     private static final double WALK_MIN_PER_KM = 15.0;
     private static final double DETOUR = 1.3;
-    private static final double TRANSIT_KMH = 22.0;
+    private static final double TRANSIT_KMH = 30.0; // 강남→홍대·노원·잠실 실소요 근사
     private static final int ACCESS_MIN = 6;
 
     @Override
