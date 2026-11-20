@@ -25,6 +25,10 @@ public class RoomRepository {
     private static final RedisScript<List> JOIN =
             RedisScript.of(new ClassPathResource("redis/room_join.lua"), List.class);
 
+    @SuppressWarnings("rawtypes")
+    private static final RedisScript<List> TRANSITION =
+            RedisScript.of(new ClassPathResource("redis/room_transition.lua"), List.class);
+
     private final StringRedisTemplate redis;
     private final ObjectMapper json;
 
@@ -63,6 +67,16 @@ public class RoomRepository {
         List<?> raw = redis.execute(JOIN, RoomKeys.all(code), String.valueOf(now.toEpochMilli()), p.id(), write(p),
                 Nicknames.key(p.nickname()), tokenHash);
         return JoinResult.of(raw);
+    }
+
+    // 기대 단계일 때만 바꾸고 roomRev 증가 (원자)
+    public CasResult transition(String code, RoomState expected, RoomState next) {
+        return CasResult.of(redis.execute(TRANSITION, List.of(RoomKeys.room(code)), expected.name(), next.name()));
+    }
+
+    // 투표·추첨이 1위를 정하면 세움 (5주차)
+    public boolean leaderDecided(String code) {
+        return "1".equals(redis.opsForHash().get(RoomKeys.room(code), "leaderDecided"));
     }
 
     public Optional<Room> find(String code) {
