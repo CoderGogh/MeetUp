@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,5 +52,13 @@ class RoomApiTest {
                 .andExpect(jsonPath("$.roomRev").value(1))
                 .andExpect(jsonPath("$.hostToken").isString())
                 .andExpect(jsonPath("$.participantToken").isString());
+    }
+
+    @Test
+    void replaysSameRoomForSameKey() throws Exception {
+        String key = UUID.randomUUID().toString();
+        String first = create(key, BODY).andReturn().getResponse().getContentAsString();
+        create(key, BODY).andExpect(status().isCreated()).andExpect(header().string("Idempotent-Replayed", "true"))
+                .andExpect(jsonPath("$.code").value(json.readTree(first).get("code").asText()));
     }
 }
