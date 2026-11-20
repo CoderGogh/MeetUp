@@ -1,13 +1,19 @@
 package com.meetup.common;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,9 +22,16 @@ class ApiExceptionHandlerTest {
     @RestController
     static class Probe {
 
+        record Body(@NotBlank String nickname) {
+        }
+
         @GetMapping("/api-error")
         void apiError() {
             throw new ApiException(ErrorCode.INVALID_TRANSITION, Map.of("currentState", "VOTING"));
+        }
+
+        @PostMapping("/validated")
+        void validated(@Valid @RequestBody Body body) {
         }
     }
 
@@ -30,5 +43,13 @@ class ApiExceptionHandlerTest {
         mvc.perform(get("/api-error")).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("INVALID_TRANSITION"))
                 .andExpect(jsonPath("$.details.currentState").value("VOTING"));
+    }
+
+    @Test
+    void validationListsFields() throws Exception {
+        mvc.perform(post("/validated").contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.details.fields.nickname").exists());
     }
 }
