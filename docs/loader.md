@@ -19,7 +19,7 @@ set -a && . ./.env && set +a   # ODSAY_API_KEY 등
 |---|---|---|
 | `ODSAY_API_KEY` | 없음 | 없으면 추정 모드 |
 | `STATIONS_CSV` | 없음 | 기준역 CSV 경로. 주면 행렬 적재 전에 먼저 넣음 |
-| `LOADER_DAILY_LIMIT` | 1000 | 1회 실행당 ODsay 호출 상한 (무료 쿼터 일 1,000건) |
+| `LOADER_DAILY_LIMIT` | 0 | 1회 실행당 ODsay 호출 상한. 0이면 호출 안 함. 무료 한도가 월 30건이라 검증할 때만 명시 |
 
 그 밖에 `--meetup.loader.max-attempts=3`(실패 재시도), `batch-size=20`, `delay=200ms`(호출 간격), `refresh-older-than=180d`(오래된 행 재조회)를 인자로 바꿀 수 있다.
 
@@ -29,7 +29,7 @@ set -a && . ./.env && set +a   # ODSAY_API_KEY 등
 2. `PENDING` 먼저, 그다음 시도 횟수가 남은 `FAILED` 순으로 20개씩 조회
 3. 성공분은 `travel_time` upsert와 `DONE` 표시를 한 트랜잭션으로 저장
 4. 실패는 `FAILED`·시도 횟수·오류 코드만 남긴다. 인증키는 메시지에 넣지 않는다
-5. ODsay 호출이 한도에 닿으면 멈춘다
+5. ODsay 호출이 한도에 닿거나 ODsay가 `429`(한도 초과)를 주면 멈춘다. 한도 초과로 못 부른 조합은 실패로 세지 않는다
 
 같은 역은 0분, 700m 이내는 도보 시간으로 바로 채운다 (ODsay가 700m 이내를 지원하지 않음). 이 조합은 호출 수에 들어가지 않는다.
 
