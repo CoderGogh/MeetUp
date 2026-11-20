@@ -49,4 +49,11 @@ class OdsayResponseTest {
         assertThatThrownBy(() -> parse("""
                 {"result":{"path":[]}}""")).isInstanceOf(RouteException.class);
     }
+
+    @Test
+    void quotaErrorIsDistinct() {
+        assertThatThrownBy(() -> parse("""
+                {"error":[{"code":"429","message":"Too many requests"}]}"""))
+                .isInstanceOf(QuotaExceededException.class);
+    }
 }
