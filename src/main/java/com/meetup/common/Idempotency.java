@@ -61,4 +61,20 @@ public class Idempotency {
             throw new IllegalStateException(e);
         }
     }
+
+    // 이미 처리된 키면 저장된 응답, 처리 중이면 409, 다른 요청이면 422
+    private ResponseEntity<Object> replay(String redisKey, String fingerprint) {
+        String stored = redis.opsForValue().get(redisKey);
+        if (stored == null) {
+            throw new ApiException(ErrorCode.IDEMPOTENCY_IN_PROGRESS);
+        }
+        IdempotencyRecord record = read(stored);
+        if (!record.fingerprint().equals(fingerprint)) {
+            throw new ApiException(ErrorCode.IDEMPOTENCY_KEY_REUSED);
+        }
+        if (!record.done()) {
+            throw new ApiException(ErrorCode.IDEMPOTENCY_IN_PROGRESS);
+        }
+        return ResponseEntity.status(record.status()).header(REPLAYED, "true").body(record.body());
+    }
 }
