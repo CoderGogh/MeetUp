@@ -71,4 +71,11 @@ class TravelTimeLoaderTest extends LoaderDbTest {
                 + "AND last_error = 'ODsay HTTP 500'")).isEqualTo(stations);
         assertThat(r.remaining()).isZero();
     }
+
+    @Test
+    void storesSource() {
+        loader(5).run();
+        assertThat(jdbc.queryForList("SELECT DISTINCT source FROM travel_time", String.class))
+                .containsExactly("ODSAY");
+    }
 }
