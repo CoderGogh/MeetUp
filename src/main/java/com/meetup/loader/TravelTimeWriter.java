@@ -35,6 +35,19 @@ public class TravelTimeWriter {
                 });
     }
 
+    // 그래프 계산값 저장. ODsay 실측 행은 덮어쓰지 않음
+    public void upsertGraph(List<LoadedRoute> routes) {
+        jdbc.batchUpdate("INSERT INTO travel_time (station_id, candidate_id, minutes, transfers, source) "
+                + "VALUES (?, ?, ?, ?, 'GRAPH') ON CONFLICT (station_id, candidate_id) DO UPDATE SET "
+                + "minutes = EXCLUDED.minutes, transfers = EXCLUDED.transfers, source = 'GRAPH', "
+                + "updated_at = now() WHERE travel_time.source <> 'ODSAY'", routes, 500, (ps, r) -> {
+                    ps.setInt(1, r.key().stationId());
+                    ps.setInt(2, r.key().candidateId());
+                    ps.setInt(3, r.route().minutes());
+                    ps.setInt(4, r.route().transfers());
+                });
+    }
+
     /** 조회 성공 조합 */
     public record LoadedRoute(LoadKey key, Route route) {
     }
