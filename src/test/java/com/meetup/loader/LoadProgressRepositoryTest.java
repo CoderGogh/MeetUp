@@ -37,4 +37,16 @@ class LoadProgressRepositoryTest extends LoaderDbTest {
         finishAllExcept(first);
         assertThat(progress.next(1, 3)).containsExactly(first);
     }
+
+    @Test
+    void stopsRetryAtMaxAttempts() {
+        progress.plan();
+        LoadKey key = progress.next(1, 3).get(0);
+        finishAllExcept(key);
+        for (int i = 0; i < 3; i++) {
+            progress.markFailed(key, "ODsay HTTP 500");
+        }
+        assertThat(progress.next(10, 3)).isEmpty();
+        assertThat(progress.remaining(3)).isZero();
+    }
 }
