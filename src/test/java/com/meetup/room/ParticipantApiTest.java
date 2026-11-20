@@ -59,4 +59,13 @@ class ParticipantApiTest {
         join(code, UUID.randomUUID().toString(), "방장").andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("NICKNAME_TAKEN"));
     }
+
+    @Test
+    void keyRetentionWithinRoomLifetime() throws Exception {
+        String code = RoomFixture.room(rooms, 5).code();
+        String key = UUID.randomUUID().toString();
+        join(code, key, "준호");
+        Long idem = redis.getExpire("idem:{room:" + code + "}:" + key);
+        assertThat(idem).isPositive().isLessThanOrEqualTo(6 * 3600);
+    }
 }
