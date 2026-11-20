@@ -1,6 +1,6 @@
 # 이동시간 행렬 적재
 
-경로 API는 이 적재에서만 부른다. 서비스 런타임은 적재된 행렬만 읽는다.
+기본은 지하철 그래프 계산(`LOADER_MODE=graph`)이다. 외부 호출 없이 역 × 후보지 전부를 채운다. ODsay(`LOADER_MODE=odsay`)는 무료 한도가 월 30건이라 표본 검증에만 쓴다. 서비스 런타임은 적재된 행렬만 읽는다.
 
 ## 실행
 
@@ -11,19 +11,21 @@ set -a && . ./.env && set +a   # ODSAY_API_KEY 등
 ```
 
 - 웹 서버 없이 뜨고, 적재가 끝나면 종료된다
-- 하루 한 번 돌리면 된다. 멈춘 곳부터 이어서 한다
+- 그래프 방식은 몇 초 안에 끝난다. 역이나 후보지가 바뀌면 다시 돌린다
 
 ## 설정
 
 | 환경변수 | 기본값 | 내용 |
 |---|---|---|
-| `ODSAY_API_KEY` | 없음 | 없으면 추정 모드 |
+| `LOADER_MODE` | graph | `graph` 그래프 계산, `odsay` ODsay 호출 |
+| `SEOUL_OPENAPI_KEY` | 없음 | 있으면 기준역을 역사마스터에서 먼저 받음 |
+| `ODSAY_API_KEY` | 없음 | odsay 방식에서 없으면 추정 모드 |
 | `STATIONS_CSV` | 없음 | 기준역 CSV 경로. 주면 행렬 적재 전에 먼저 넣음 |
 | `LOADER_DAILY_LIMIT` | 0 | 1회 실행당 ODsay 호출 상한. 0이면 호출 안 함. 무료 한도가 월 30건이라 검증할 때만 명시 |
 
 그 밖에 `--meetup.loader.max-attempts=3`(실패 재시도), `batch-size=20`, `delay=200ms`(호출 간격), `refresh-older-than=180d`(오래된 행 재조회)를 인자로 바꿀 수 있다.
 
-## 동작
+## ODsay 방식 동작
 
 1. `station × candidate` 중 `load_progress`에 없는 조합만 `PENDING`으로 추가
 2. `PENDING` 먼저, 그다음 시도 횟수가 남은 `FAILED` 순으로 20개씩 조회
