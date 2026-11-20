@@ -35,4 +35,11 @@ class TransitionGuard {
                     Map.of("reason", "ORIGINS_MISSING", "missing", missing));
         }
     }
+
+    // 득표 1위가 유일하거나 추첨이 끝남
+    private void leaderDecided(Room room, Map<String, Object> where) {
+        if (!rooms.leaderDecided(room.code())) {
+            throw fail("득표 1위가 정해지지 않았습니다", where, Map.of("reason", "NO_LEADER"));
+        }
+    }
 }
