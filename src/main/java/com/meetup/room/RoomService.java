@@ -85,4 +85,12 @@ public class RoomService {
         return new CreatedRoom(room.code(), inviteUrl(room.code()), room.state(), room.rev(), room.expiresAt(),
                 host.id(), participantToken, hostToken);
     }
+
+    public RoomView view(String code, String participantToken) {
+        Room room = load(code);
+        String me = authenticate(code, participantToken);
+        return new RoomView(room.code(), room.theme(), room.capacity(), room.state(), room.rev(),
+                room.expiresAt(), inviteUrl(code), me,
+                rooms.participants(code).stream().map(RoomView.Member::of).toList());
+    }
 }
