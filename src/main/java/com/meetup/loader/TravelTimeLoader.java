@@ -28,6 +28,24 @@ public class TravelTimeLoader {
         this.props = props;
     }
 
+    public LoadReport run() {
+        int planned = progress.plan();
+        if (props.refreshOlderThan() != null) {
+            progress.requeueStale(props.refreshOlderThan());
+        }
+        Tally t = new Tally(byId(places.findStations(), Station::id),
+                byId(places.findCandidates(), Candidate::id));
+        while (t.calls < props.dailyLimit()) {
+            List<LoadKey> batch = progress.next(
+                    Math.min(props.batchSize(), props.dailyLimit() - t.calls), props.maxAttempts());
+            if (batch.isEmpty()) {
+                break;
+            }
+            load(batch, t);
+        }
+        return new LoadReport(planned, t.loaded, t.failed, progress.remaining(props.maxAttempts()));
+    }
+
     // 배치 조회 후 한 번에 저장
     private void load(List<LoadKey> batch, Tally t) {
         List<LoadedRoute> ok = new ArrayList<>();
