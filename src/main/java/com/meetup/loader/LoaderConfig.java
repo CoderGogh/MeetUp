@@ -1,5 +1,6 @@
 package com.meetup.loader;
 
+import com.meetup.place.PlaceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -23,4 +24,9 @@ class LoaderConfig {
         return new OdsayRouteClient(builder.baseUrl("https://api.odsay.com").build(), props.odsayKey());
     }
 
+    @Bean
+    TravelTimeLoader travelTimeLoader(PlaceRepository places, LoadProgressRepository progress,
+            TravelTimeWriter writer, RouteClient client, LoaderProperties props) {
+        return new TravelTimeLoader(places, progress, writer, client, props);
+    }
 }
