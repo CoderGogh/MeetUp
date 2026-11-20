@@ -55,4 +55,9 @@ class CandidateSeedTest {
         return jdbc.queryForList("SELECT c.name FROM candidate c "
                 + "JOIN station s ON s.id = c.station_id WHERE " + where, String.class);
     }
+
+    @Test
+    void indoorRequiresUnderground() {
+        assertThat(violating("'INDOOR' = ANY (c.theme_tags) AND NOT c.underground")).isEmpty();
+    }
 }
