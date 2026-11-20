@@ -75,4 +75,11 @@ class IdempotencyTest {
                 .extracting("code").isEqualTo(ErrorCode.INVALID_REQUEST);
         assertThatThrownBy(() -> call(null, "a")).isInstanceOf(ApiException.class);
     }
+
+    @Test
+    void keepsTtlWithinGivenLimit() {
+        call("key-00005", "a");
+        Long seconds = redis.getExpire("idem:{" + scope + "}:key-00005");
+        assertThat(seconds).isPositive().isLessThanOrEqualTo(ttl.toSeconds());
+    }
 }
