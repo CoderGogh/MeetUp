@@ -14,6 +14,7 @@
 - [기초 기획안](docs/plan.md)
 - [후보지 선정](docs/candidates.md)
 - [이동시간 행렬 적재](docs/loader.md)
+- [API 공통 규칙](docs/api.md)
 - [형상 관리 규칙](CONTRIBUTING.md)
 ## 실행
 
