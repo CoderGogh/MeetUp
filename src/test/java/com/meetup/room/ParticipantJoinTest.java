@@ -87,4 +87,10 @@ class ParticipantJoinTest {
         assertThat(concurrently(code, 20, i -> "참여자" + i)).isEqualTo(4);
         assertThat(redis.opsForHash().size(RoomKeys.participants(code))).isEqualTo(5);
     }
+
+    @Test
+    void concurrentSameNicknameOnlyOneWins() throws Exception {
+        String code = RoomFixture.room(rooms, 10).code();
+        assertThat(concurrently(code, 10, i -> "같은이름")).isEqualTo(1);
+    }
 }
