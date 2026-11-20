@@ -32,4 +32,11 @@ class SubwayGraphTest {
         assertThat(path.minutes()).isEqualTo(2 + 2 + 1 + 1.0);
         assertThat(path.transfers()).isEqualTo(1);
     }
+
+    @Test
+    void prefersFasterRouteWithTransfer() {
+        var g = graph(new LineSegment("X", "가", "나", 1.0), new LineSegment("X", "나", "다", 20.0),
+                new LineSegment("Y", "나", "다", 2.0));
+        assertThat(g.shortestFrom("가", 0).get("다").minutes()).isEqualTo(1 + 3 + 2.0);
+    }
 }
