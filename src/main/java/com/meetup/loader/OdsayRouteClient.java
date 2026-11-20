@@ -21,6 +21,11 @@ public class OdsayRouteClient implements RouteClient {
 
     @Override
     public Route find(Station from, Candidate to) {
+        // 700m 이내는 ODsay 미지원
+        Route near = EstimateRouteClient.nearby(from, to);
+        if (near != null) {
+            return near;
+        }
         return OdsayResponse.parse(call(from, to));
     }
 
