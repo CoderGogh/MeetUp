@@ -37,4 +37,12 @@ class SeoulStationImporterTest extends LoaderDbTest {
                 new MasterStation("신촌", "경의중앙선", 37.5598, 126.9426)).importStations();
         assertThat(n).isZero();
     }
+
+    @Test
+    void updatesSeededCandidateStation() {
+        importer(new MasterStation("강남", "2호선", 37.497952, 127.027619)).importStations();
+        Double lat = jdbc.queryForObject("SELECT ST_Y(geom) FROM station WHERE name = '강남'", Double.class);
+        assertThat(lat).isEqualTo(37.497952);
+        assertThat(lines("강남")).isEqualTo("2호선,신분당선");
+    }
 }
