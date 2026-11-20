@@ -45,4 +45,11 @@ public class Idempotency {
             throw new IllegalStateException(e);
         }
     }
+
+    // 선점 때 잡은 만료 시각 유지 (방 TTL을 넘지 않게)
+    private void keepTtlSet(String key, String value) {
+        redis.execute((RedisCallback<Boolean>) c -> c.stringCommands().set(
+                key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8),
+                Expiration.keepTtl(), SetOption.upsert()));
+    }
 }
