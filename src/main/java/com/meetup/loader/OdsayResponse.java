@@ -12,7 +12,11 @@ final class OdsayResponse {
         JsonNode error = root.path("error");
         if (!error.isMissingNode()) {
             JsonNode e = error.isArray() ? error.path(0) : error;
-            throw new RouteException("ODsay 오류 코드 " + e.path("code").asText("?"));
+            String code = e.path("code").asText("?");
+            if (code.equals("429")) {
+                throw new QuotaExceededException("ODsay 호출 한도 초과");
+            }
+            throw new RouteException("ODsay 오류 코드 " + code);
         }
         JsonNode best = null;
         for (JsonNode path : root.path("result").path("path")) {

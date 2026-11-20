@@ -9,4 +9,4 @@ meetup:
     odsay-key: ${ODSAY_API_KEY:}
     seoul-key: ${SEOUL_OPENAPI_KEY:}
     stations-csv: ${STATIONS_CSV:}
-    daily-limit: ${LOADER_DAILY_LIMIT:1000}
+    daily-limit: ${LOADER_DAILY_LIMIT:0}

@@ -35,7 +35,7 @@ public class TravelTimeLoader {
         }
         Tally t = new Tally(byId(places.findStations(), Station::id),
                 byId(places.findCandidates(), Candidate::id));
-        while (t.calls < props.dailyLimit()) {
+        while (!t.quotaExceeded && t.calls < props.dailyLimit()) {
             List<LoadKey> batch = progress.next(
                     Math.min(props.batchSize(), props.dailyLimit() - t.calls), props.maxAttempts());
             if (batch.isEmpty()) {
@@ -43,7 +43,8 @@ public class TravelTimeLoader {
             }
             load(batch, t);
         }
-        return new LoadReport(planned, t.loaded, t.failed, progress.remaining(props.maxAttempts()));
+        return new LoadReport(planned, t.loaded, t.failed, progress.remaining(props.maxAttempts()),
+                t.quotaExceeded);
     }
 
     // 배치 조회 후 한 번에 저장
@@ -57,6 +58,10 @@ public class TravelTimeLoader {
                     t.calls++;
                     pause();
                 }
+            } catch (QuotaExceededException e) {
+                // 남은 조합은 실패 처리 없이 다음 실행으로
+                t.quotaExceeded = true;
+                break;
             } catch (RouteException e) {
                 // 실패 조합은 기록만 하고 다음 조합 진행
                 progress.markFailed(key, e.getMessage());
@@ -94,6 +99,7 @@ public class TravelTimeLoader {
         int calls;
         int loaded;
         int failed;
+        boolean quotaExceeded;
 
         Tally(Map<Integer, Station> stations, Map<Integer, Candidate> candidates) {
             this.stations = stations;
