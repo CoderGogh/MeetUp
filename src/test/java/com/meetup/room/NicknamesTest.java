@@ -18,4 +18,11 @@ class NicknamesTest {
         assertThat(Nicknames.clean("가나다라마바사아자차카타")).hasSize(12);
         assertThatThrownBy(() -> Nicknames.clean("가나다라마바사아자차카타파")).isInstanceOf(ApiException.class);
     }
+
+    @Test
+    void rejectsBlankAndInvisible() {
+        assertThatThrownBy(() -> Nicknames.clean("   ")).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> Nicknames.clean("민​지")).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> Nicknames.clean("민\n지")).isInstanceOf(ApiException.class);
+    }
 }
