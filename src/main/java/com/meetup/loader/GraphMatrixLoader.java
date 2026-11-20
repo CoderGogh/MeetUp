@@ -31,6 +31,27 @@ public class GraphMatrixLoader {
         this.params = params;
     }
 
+    public GraphReport run() {
+        List<Station> stations = places.findStations();
+        List<Candidate> candidates = places.findCandidates();
+        Map<Integer, String> nameOf = new HashMap<>();
+        stations.forEach(s -> nameOf.put(s.id(), s.name()));
+        SubwayGraph graph = graph(stations);
+        List<LoadedRoute> rows = new ArrayList<>();
+        Map<LoadKey, Double> computed = new HashMap<>();
+        int outside = 0;
+        for (Station s : stations) {
+            if (graph.has(s.name())) {
+                Map<String, Path> paths = graph.shortestFrom(s.name(), params.initialWaitMinutes());
+                collect(s, paths, candidates, nameOf, rows, computed);
+            } else {
+                outside++;
+            }
+        }
+        writer.upsertGraph(rows);
+        return report(rows.size(), outside, graph.skipped(), computed);
+    }
+
     // 한 출발역의 후보지별 결과 모음
     private void collect(Station from, Map<String, Path> paths, List<Candidate> candidates,
             Map<Integer, String> nameOf, List<LoadedRoute> rows, Map<LoadKey, Double> computed) {
