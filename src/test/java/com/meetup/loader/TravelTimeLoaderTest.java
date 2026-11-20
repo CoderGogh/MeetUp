@@ -59,4 +59,16 @@ class TravelTimeLoaderTest extends LoaderDbTest {
         loader(50).run();
         assertThat(fake.calls).hasSize(100).doesNotHaveDuplicates();
     }
+
+    @Test
+    void retriesFailedUpToMaxAttempts() {
+        int bad = places.findCandidates().get(0).id();
+        fake.failing.add(bad);
+        LoadReport r = loader(100_000).run();
+        int stations = count("SELECT count(*) FROM station");
+        assertThat(r.failed()).isEqualTo(stations * 3);
+        assertThat(count("SELECT count(*) FROM load_progress WHERE status = 'FAILED' AND attempts = 3 "
+                + "AND last_error = 'ODsay HTTP 500'")).isEqualTo(stations);
+        assertThat(r.remaining()).isZero();
+    }
 }
