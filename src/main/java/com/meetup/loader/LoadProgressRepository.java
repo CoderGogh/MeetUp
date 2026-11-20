@@ -29,4 +29,15 @@ public class LoadProgressRepository {
                         + " ORDER BY status DESC, station_id, candidate_id LIMIT ?",
                 (rs, i) -> new LoadKey(rs.getInt(1), rs.getInt(2)), maxAttempts, limit);
     }
+
+    public void markFailed(LoadKey key, String error) {
+        jdbc.update("UPDATE load_progress SET status = 'FAILED', attempts = attempts + 1, "
+                        + "last_error = left(?, 200), updated_at = now() WHERE station_id = ? AND candidate_id = ?",
+                error, key.stationId(), key.candidateId());
+    }
+
+    public int remaining(int maxAttempts) {
+        return jdbc.queryForObject("SELECT count(*) FROM load_progress WHERE " + UNFINISHED,
+                Integer.class, maxAttempts);
+    }
 }
