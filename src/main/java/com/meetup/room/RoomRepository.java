@@ -2,7 +2,11 @@ package com.meetup.room;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.meetup.place.Theme;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -46,5 +50,16 @@ public class RoomRepository {
                 String.valueOf(room.createdAt().toEpochMilli()), String.valueOf(room.expiresAt().toEpochMilli()),
                 host.id(), write(host), Nicknames.key(host.nickname()), participantTokenHash);
         return Long.valueOf(1).equals(created);
+    }
+
+    public Optional<Room> find(String code) {
+        Map<Object, Object> h = redis.opsForHash().entries(RoomKeys.room(code));
+        if (h.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new Room(code, Theme.valueOf((String) h.get("theme")),
+                Integer.parseInt((String) h.get("capacity")), RoomState.valueOf((String) h.get("state")),
+                Long.parseLong((String) h.get("rev")), Instant.ofEpochMilli(Long.parseLong((String) h.get("createdAt"))),
+                Instant.ofEpochMilli(Long.parseLong((String) h.get("expiresAt"))), (String) h.get("hostTokenHash")));
     }
 }
