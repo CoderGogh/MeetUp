@@ -29,4 +29,12 @@ public class RoomRepository {
             throw new IllegalStateException(e);
         }
     }
+
+    private Participant read(Object stored) {
+        try {
+            return json.readValue(stored.toString(), Participant.class);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }
