@@ -36,4 +36,11 @@ class OdsayResponseTest {
                 {"error":{"code":"-98","msg":"출, 도착지가 700m이내입니다."}}"""))
                 .isInstanceOf(RouteException.class).hasMessageContaining("-98");
     }
+
+    @Test
+    void errorArrayThrows() {
+        assertThatThrownBy(() -> parse("""
+                {"error":[{"code":"500","message":"ApiKey authentication failed."}]}"""))
+                .isInstanceOf(RouteException.class).hasMessageContaining("500");
+    }
 }
