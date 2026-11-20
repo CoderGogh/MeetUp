@@ -24,4 +24,12 @@ class SubwayGraphTest {
         assertThat(path.minutes()).isEqualTo(5.0);
         assertThat(path.transfers()).isZero();
     }
+
+    @Test
+    void addsTransferWalkAndWait() {
+        var g = graph(new LineSegment("X", "가", "나", 2.0), new LineSegment("Y", "나", "라", 1.0));
+        var path = g.shortestFrom("가", 0).get("라");
+        assertThat(path.minutes()).isEqualTo(2 + 2 + 1 + 1.0);
+        assertThat(path.transfers()).isEqualTo(1);
+    }
 }
