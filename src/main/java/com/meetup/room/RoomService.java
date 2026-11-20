@@ -33,10 +33,15 @@ public class RoomService {
         return props.inviteBaseUrl() + "/r/" + code;
     }
 
+    // 없는 방 404 (만료 여부는 보지 않음)
+    Room find(String code) {
+        return (RoomCodes.isValid(code) ? rooms.find(code) : Optional.<Room>empty())
+                .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
+    }
+
     // 없는 방 404, 만료된 방 410
     Room load(String code) {
-        Room room = (RoomCodes.isValid(code) ? rooms.find(code) : Optional.<Room>empty())
-                .orElseThrow(() -> new ApiException(ErrorCode.ROOM_NOT_FOUND));
+        Room room = find(code);
         if (room.stateAt(clock.instant()) == RoomState.EXPIRED) {
             throw new ApiException(ErrorCode.ROOM_EXPIRED, Map.of("expiredAt", room.expiresAt().toString()));
         }
@@ -45,7 +50,7 @@ public class RoomService {
 
     // 방 관련 요청 키 보존 기간 = 남은 방 수명 (RFP 8.5.1)
     Duration remaining(String code) {
-        Duration left = Duration.between(clock.instant(), load(code).expiresAt());
+        Duration left = Duration.between(clock.instant(), find(code).expiresAt());
         return left.compareTo(Duration.ofSeconds(1)) < 0 ? Duration.ofSeconds(1) : left;
     }
 
