@@ -4,6 +4,8 @@ import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
 import com.meetup.common.Hashes;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -55,5 +57,19 @@ public class RoomService {
             throw new ApiException(ErrorCode.INVALID_REQUEST, "정원은 2~" + props.maxParticipants() + "명입니다",
                     Map.of("fields", Map.of("capacity", "2~" + props.maxParticipants())));
         }
+    }
+
+    // 코드가 겹치면 새 코드로 다시
+    private Room save(CreateRoomRequest req, Participant host, String hostToken, String participantToken,
+            Instant now) {
+        Duration keyTtl = props.ttl().plus(props.expiredGrace());
+        for (int i = 0; i < CODE_ATTEMPTS; i++) {
+            Room room = new Room(RoomCodes.generate(), req.theme(), req.capacity(), RoomState.COLLECTING, 1,
+                    now, now.plus(props.ttl()), Hashes.sha256(hostToken));
+            if (rooms.create(room, host, Hashes.sha256(participantToken), keyTtl)) {
+                return room;
+            }
+        }
+        throw new IllegalStateException("방 코드 생성 충돌");
     }
 }
