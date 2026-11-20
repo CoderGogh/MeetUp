@@ -49,4 +49,11 @@ public class RoomService {
         return rooms.participantIdByToken(code, Hashes.sha256(participantToken))
                 .orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
     }
+
+    private void checkCapacity(int capacity) {
+        if (capacity > props.maxParticipants()) {
+            throw new ApiException(ErrorCode.INVALID_REQUEST, "정원은 2~" + props.maxParticipants() + "명입니다",
+                    Map.of("fields", Map.of("capacity", "2~" + props.maxParticipants())));
+        }
+    }
 }
