@@ -16,7 +16,8 @@ public record LoaderProperties(
         String stationsCsv,
         String odsayKey,
         String seoulKey,
-        @DefaultValue("graph") String mode) {
+        @DefaultValue("graph") String mode,
+        @DefaultValue("30") int odsayMonthlyLimit) {
 
     public boolean hasOdsayKey() {
         return odsayKey != null && !odsayKey.isBlank();

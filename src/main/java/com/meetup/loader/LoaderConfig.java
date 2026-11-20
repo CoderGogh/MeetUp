@@ -2,11 +2,13 @@ package com.meetup.loader;
 
 import com.meetup.place.PlaceRepository;
 import com.meetup.subway.GraphParams;
+import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestClient;
 
 /** 적재 구성. 키가 없으면 추정 모드 */
@@ -15,6 +17,12 @@ import org.springframework.web.client.RestClient;
 class LoaderConfig {
 
     private static final Logger log = LoggerFactory.getLogger(LoaderConfig.class);
+
+    // ODsay 월 한도 장부 (기본 30건)
+    @Bean
+    MonthlyCallBudget odsayBudget(JdbcTemplate jdbc, LoaderProperties props) {
+        return new MonthlyCallBudget(jdbc, "ODSAY", props.odsayMonthlyLimit(), Clock.systemUTC());
+    }
 
     @Bean
     RouteClient routeClient(LoaderProperties props, RestClient.Builder builder) {
