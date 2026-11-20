@@ -30,3 +30,15 @@
 - 같은 키를 다른 내용의 요청에 쓰면 422, 처음 요청을 아직 처리 중이면 409
 - 처리 중 오류가 나면 키를 풀어서 같은 키로 다시 보낼 수 있다
 - 보존 기간은 방 TTL을 넘지 않는다. 결과를 저장할 때도 처음 잡은 만료 시각을 유지한다
+
+## 방
+
+| 메서드 | 경로 | 헤더 | 응답 |
+|---|---|---|---|
+| POST | `/rooms` | `Idempotency-Key` | 201 `{code, inviteUrl, state, roomRev, expiresAt, participantId, participantToken, hostToken}` |
+| GET | `/rooms/{code}` | `X-Participant-Token` | 200 `{code, theme, capacity, state, roomRev, expiresAt, inviteUrl, me, participants[]}` |
+
+생성 요청: `{"theme": "CASUAL", "capacity": 5, "nickname": "민지"}`. 테마는 `MEETING` `TALK` `CASUAL` `DATE` `INDOOR`, 정원 2~10, 별명 1~12자.
+
+- 방장은 만든 순간 첫 참여자로 들어간다. 참여자 토큰과 방장 토큰을 따로 받는다
+- 방 코드는 헷갈리는 글자를 뺀 31자 중 12자 (약 59비트). 순차 증가하지 않는다
