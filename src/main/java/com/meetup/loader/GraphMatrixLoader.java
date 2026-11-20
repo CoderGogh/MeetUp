@@ -31,6 +31,20 @@ public class GraphMatrixLoader {
         this.params = params;
     }
 
+    // 한 출발역의 후보지별 결과 모음
+    private void collect(Station from, Map<String, Path> paths, List<Candidate> candidates,
+            Map<Integer, String> nameOf, List<LoadedRoute> rows, Map<LoadKey, Double> computed) {
+        for (Candidate c : candidates) {
+            Path p = paths.get(nameOf.get(c.stationId()));
+            if (p != null) {
+                LoadKey key = new LoadKey(from.id(), c.id());
+                int minutes = (int) Math.round(p.minutes());
+                rows.add(new LoadedRoute(key, new Route(minutes, p.transfers(), Route.Source.GRAPH)));
+                computed.put(key, p.minutes());
+            }
+        }
+    }
+
     // 역 좌표로 그래프 구성 (소요시간 없는 구간 추정용)
     private SubwayGraph graph(List<Station> stations) {
         Map<String, double[]> coords = new HashMap<>();
