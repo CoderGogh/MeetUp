@@ -1,5 +1,7 @@
 package com.meetup.place;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,7 +53,7 @@ class CandidateSeedTest {
     }
 
     // 조건에 걸리는 후보명
-    private java.util.List<String> violating(String where) {
+    private List<String> violating(String where) {
         return jdbc.queryForList("SELECT c.name FROM candidate c "
                 + "JOIN station s ON s.id = c.station_id WHERE " + where, String.class);
     }
