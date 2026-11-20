@@ -54,6 +54,16 @@ public class RoomService {
         return left.compareTo(Duration.ofSeconds(1)) < 0 ? Duration.ofSeconds(1) : left;
     }
 
+    // 방장 토큰이 맞으면 HOST, 참여자 토큰만 맞으면 MEMBER, 둘 다 아니면 401
+    Actor actor(String code, String hostToken, String participantToken) {
+        Room room = find(code);
+        if (hostToken != null && Hashes.sameHash(Hashes.sha256(hostToken), room.hostTokenHash())) {
+            return Actor.HOST;
+        }
+        authenticate(code, participantToken);
+        return Actor.MEMBER;
+    }
+
     // 참여자 토큰 → 참여자 ID. 없거나 틀리면 401
     String authenticate(String code, String participantToken) {
         if (participantToken == null || participantToken.isBlank()) {
