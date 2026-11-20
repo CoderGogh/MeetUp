@@ -13,6 +13,7 @@
 - [서비스 컨셉](docs/concept.md)
 - [기초 기획안](docs/plan.md)
 - [후보지 선정](docs/candidates.md)
+- [이동시간 행렬 적재](docs/loader.md)
 - [형상 관리 규칙](CONTRIBUTING.md)
 ## 실행
 
@@ -25,3 +26,4 @@ curl localhost:8080/actuator/health
 - 두 번째 인스턴스까지 띄우기: `docker compose --profile scale up -d`
 - 종료: `docker compose down` (데이터 볼륨 유지, `-v` 붙이면 삭제)
 - 로컬 개발: PostGIS·Redis만 compose로 띄우고 `./gradlew bootRun`
+- 이동시간 행렬 적재: `./gradlew bootRun --args='--spring.profiles.active=loader'` ([방법](docs/loader.md))
