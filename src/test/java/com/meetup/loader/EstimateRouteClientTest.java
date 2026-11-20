@@ -32,4 +32,11 @@ class EstimateRouteClientTest {
         assertThat(r.minutes()).isBetween(5, 7);
         assertThat(r.transfers()).isZero();
     }
+
+    @Test
+    void fartherTakesLonger() {
+        Route samsung = client.find(gangnam, at(3, 37.5088, 127.0631));
+        Route cityHall = client.find(gangnam, at(4, 37.5657, 126.9769));
+        assertThat(cityHall.minutes()).isGreaterThan(samsung.minutes());
+    }
 }
