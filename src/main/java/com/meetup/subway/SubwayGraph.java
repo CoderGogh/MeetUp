@@ -33,6 +33,7 @@ public final class SubwayGraph {
             g.link(a, b, ride + p.dwellMinutes(), 0);
             g.link(b, a, ride + p.dwellMinutes(), 0);
         }
+        g.linkTransfers(transfers, p);
         return g;
     }
 
@@ -44,6 +45,21 @@ public final class SubwayGraph {
             return null;
         }
         return Geo.distanceKm(a[0], a[1], b[0], b[1]) * p.detour() / p.estimatedKmh() * 60;
+    }
+
+    // 같은 역의 다른 노선끼리 환승 간선 (보행 + 대기)
+    private void linkTransfers(TransferTimes transfers, GraphParams p) {
+        for (var e : byStation.entrySet()) {
+            for (int a : e.getValue()) {
+                for (int b : e.getValue()) {
+                    if (a != b) {
+                        Double walk = transfers.walk(e.getKey(), lineOf.get(a), lineOf.get(b));
+                        double w = walk != null ? walk : p.defaultTransferWalk();
+                        link(a, b, w + p.transferWaitMinutes(), 1);
+                    }
+                }
+            }
+        }
     }
 
     public boolean has(String station) {
