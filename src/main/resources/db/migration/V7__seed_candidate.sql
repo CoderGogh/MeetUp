@@ -26,3 +26,18 @@ FROM (VALUES
 ) AS v (name, area, tags, underground)
 JOIN station s ON s.name = v.name
 ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO candidate (name, station_id, area_type, region, theme_tags, underground, geom)
+SELECT v.name, s.id, v.area, 'GANGBUK', v.tags::VARCHAR(10)[], v.underground, s.geom
+FROM (VALUES
+    ('종각',               'LARGE',  '{CASUAL}',           false),
+    ('을지로3가',          'MEDIUM', '{CASUAL,TALK}',      false),
+    ('시청',               'MEDIUM', '{MEETING,INDOOR}',   true),
+    ('서울역',             'LARGE',  '{MEETING,INDOOR}',   true),
+    ('혜화',               'MEDIUM', '{DATE,TALK}',        false),
+    ('동대문역사문화공원', 'MEDIUM', '{CASUAL,INDOOR}',    true),
+    ('노원',               'MEDIUM', '{CASUAL,TALK}',      false),
+    ('용산',               'LARGE',  '{DATE,INDOOR}',      true)
+) AS v (name, area, tags, underground)
+JOIN station s ON s.name = v.name
+ON CONFLICT (name) DO NOTHING;
