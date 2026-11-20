@@ -3,6 +3,10 @@ package com.meetup.room;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -112,5 +116,25 @@ class RoomStateMachineTest {
         RoomFixture.expire(redis, code);
         assertThat(failure(code, RoomTrigger.CALCULATE_CANDIDATES, Actor.HOST).details())
                 .containsEntry("currentState", "EXPIRED");
+    }
+
+    @Test
+    void concurrentTransitionsApplyOnce() throws Exception {
+        String code = room();
+        RoomFixture.setState(redis, code, RoomState.REVIEWING);
+        var ok = new AtomicInteger();
+        var pool = Executors.newFixedThreadPool(10);
+        pool.invokeAll(IntStream.range(0, 10).<Callable<Void>>mapToObj(i -> () -> {
+            try {
+                machine.fire(code, RoomTrigger.START_VOTING, Actor.HOST);
+                ok.incrementAndGet();
+            } catch (ApiException e) {
+                // 이미 바뀜
+            }
+            return null;
+        }).toList());
+        pool.shutdown();
+        assertThat(ok.get()).isEqualTo(1);
+        assertThat(redis.opsForHash().get(RoomKeys.room(code), "rev")).isEqualTo("2");
     }
 }
