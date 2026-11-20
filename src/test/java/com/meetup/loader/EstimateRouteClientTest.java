@@ -25,4 +25,11 @@ class EstimateRouteClientTest {
         assertThat(client.find(gangnam, at(1, 37.4979, 127.0276)))
                 .isEqualTo(new Route(0, 0, Route.Source.ESTIMATE));
     }
+
+    @Test
+    void walkingDistanceIsShort() {
+        Route r = client.find(gangnam, at(2, 37.5015, 127.0276));
+        assertThat(r.minutes()).isBetween(5, 7);
+        assertThat(r.transfers()).isZero();
+    }
 }
