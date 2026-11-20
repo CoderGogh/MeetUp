@@ -27,6 +27,12 @@ public class TravelTimeWriter {
                     ps.setInt(4, r.route().transfers());
                     ps.setString(5, r.route().source().name());
                 });
+        jdbc.batchUpdate("UPDATE load_progress SET status = 'DONE', attempts = attempts + 1, "
+                + "last_error = NULL, updated_at = now() WHERE station_id = ? AND candidate_id = ?",
+                routes, routes.size(), (ps, r) -> {
+                    ps.setInt(1, r.key().stationId());
+                    ps.setInt(2, r.key().candidateId());
+                });
     }
 
     /** 조회 성공 조합 */
