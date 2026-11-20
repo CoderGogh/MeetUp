@@ -61,4 +61,14 @@ class TransitionApiTest {
         mvc.perform(fire(room.code(), UUID.randomUUID().toString(), "CALCULATE_CANDIDATES")
                         .header("X-Host-Token", "wrong")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void forbiddenTransitionIsConflictWithState() throws Exception {
+        CreatedRoom room = RoomFixture.room(rooms, 5);
+        mvc.perform(fire(room.code(), UUID.randomUUID().toString(), "CONFIRM")
+                        .header("X-Host-Token", room.hostToken()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INVALID_TRANSITION"))
+                .andExpect(jsonPath("$.details.currentState").value("COLLECTING"))
+                .andExpect(jsonPath("$.details.roomRev").value(1));
+    }
 }
