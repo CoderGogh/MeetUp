@@ -42,6 +42,9 @@ public class OdsayRouteClient implements RouteClient {
             }
             return body;
         } catch (RestClientResponseException e) {
+            if (e.getStatusCode().value() == 429) {
+                throw new QuotaExceededException("ODsay 호출 한도 초과");
+            }
             throw new RouteException("ODsay HTTP " + e.getStatusCode().value());
         } catch (RestClientException e) {
             throw new RouteException("ODsay 호출 실패 " + e.getClass().getSimpleName());
