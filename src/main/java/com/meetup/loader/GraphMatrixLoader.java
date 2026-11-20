@@ -31,6 +31,15 @@ public class GraphMatrixLoader {
         this.params = params;
     }
 
+    // 역 좌표로 그래프 구성 (소요시간 없는 구간 추정용)
+    private SubwayGraph graph(List<Station> stations) {
+        Map<String, double[]> coords = new HashMap<>();
+        for (Station s : stations) {
+            coords.put(s.name(), new double[] {s.lat(), s.lng()});
+        }
+        return SubwayGraph.build(SubwaySources.all(), coords, TransferTimes.load(), params);
+    }
+
     // ODsay 실측 대비 절대 오차
     private GraphReport report(int pairs, int outside, int skipped, Map<LoadKey, Double> computed) {
         double sum = 0;
