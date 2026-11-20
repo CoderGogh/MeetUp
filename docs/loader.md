@@ -33,3 +33,19 @@ docker compose up -d postgis
 같은 역은 0분, 700m 이내는 도보 시간으로 바로 채운다 (ODsay가 700m 이내를 지원하지 않음). 이 조합은 호출 수에 들어가지 않는다.
 
 중간에 죽으면 저장 전 배치(최대 20건)만 다시 부른다.
+
+## 추정 모드
+
+키가 없으면 직선거리로 채운다. `source = 'ESTIMATE'`로 남기므로 나중에 키를 넣고 다시 돌리면 갈아끼울 수 있다.
+
+- 소요 = 직선거리 × 1.3(우회) ÷ 30km/h + 6분(승강장·대기)
+- 환승은 추정하지 않는다 (0)
+- 개발·테스트용. 데모 데이터는 ODsay로 채운다
+
+추정 행을 ODsay로 바꾸려면 해당 조합을 다시 `PENDING`으로 돌린다.
+
+```sql
+UPDATE load_progress p SET status = 'PENDING', attempts = 0
+FROM travel_time t
+WHERE t.station_id = p.station_id AND t.candidate_id = p.candidate_id AND t.source = 'ESTIMATE';
+```
