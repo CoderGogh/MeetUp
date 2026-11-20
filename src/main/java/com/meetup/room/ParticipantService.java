@@ -19,13 +19,15 @@ public class ParticipantService {
 
     private final RoomService rooms;
     private final RoomRepository repo;
+    private final RoomStateMachine machine;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
-    public ParticipantService(RoomService rooms, RoomRepository repo, ApplicationEventPublisher events,
-            Clock clock) {
+    public ParticipantService(RoomService rooms, RoomRepository repo, RoomStateMachine machine,
+            ApplicationEventPublisher events, Clock clock) {
         this.rooms = rooms;
         this.repo = repo;
+        this.machine = machine;
         this.events = events;
         this.clock = clock;
     }
@@ -40,6 +42,15 @@ public class ParticipantService {
             case "EXPIRED" -> new ApiException(ErrorCode.ROOM_EXPIRED);
             default -> new ApiException(ErrorCode.ROOM_NOT_FOUND);
         };
+    }
+
+    // 후보 검토 중 새 참여자 → 입력 단계로 (RFP 8.4.1). 다른 요청이 먼저 바꿨으면 그대로
+    private long backToCollecting(String code, long rev) {
+        try {
+            return machine.fire(code, RoomTrigger.PARTICIPANT_CHANGED, Actor.SYSTEM).roomRev();
+        } catch (ApiException e) {
+            return rev;
+        }
     }
 
     // 별명은 로그에 남기지 않음 (RFP 10.4)
@@ -58,6 +69,9 @@ public class ParticipantService {
         events.publishEvent(new RoomEvent(code, rev, "participant.joined",
                 Map.of("nickname", p.nickname(), "count", count)));
         log.info("room.joined code={} rev={} count={}", code, rev, count);
+        if (r.stateBefore() == RoomState.REVIEWING) {
+            rev = backToCollecting(code, rev);
+        }
         return new JoinedRoom(p.id(), token, rev);
     }
 }
