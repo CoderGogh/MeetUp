@@ -28,4 +28,12 @@ class CandidateSeedTest {
                 "SELECT count(*) FROM candidate GROUP BY region", Integer.class);
         assertThat(counts).hasSize(Region.values().length).allMatch(c -> c >= 5);
     }
+
+    @Test
+    void noLineCoversMoreThanHalf() {
+        String sql = "SELECT max(n) FROM (SELECT count(*) AS n FROM candidate c "
+                + "JOIN station s ON s.id = c.station_id "
+                + "CROSS JOIN unnest(string_to_array(s.lines, ',')) AS line GROUP BY line) t";
+        assertThat(jdbc.queryForObject(sql, Integer.class)).isLessThanOrEqualTo(15);
+    }
 }
