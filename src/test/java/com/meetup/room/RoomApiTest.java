@@ -73,4 +73,16 @@ class RoomApiTest {
         create(UUID.randomUUID().toString(), BODY.replace("5", "11")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.fields.capacity").exists());
     }
+
+    @Test
+    void participantSeesRoom() throws Exception {
+        JsonNode room = created();
+        mvc.perform(get("/rooms/" + room.get("code").asText())
+                        .header("X-Participant-Token", room.get("participantToken").asText()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.me").value(room.get("participantId").asText()))
+                .andExpect(jsonPath("$.participants[0].nickname").value("민지"))
+                .andExpect(jsonPath("$.participants[0].host").value(true))
+                .andExpect(jsonPath("$.hostTokenHash").doesNotExist());
+    }
 }
