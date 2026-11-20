@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -109,5 +110,13 @@ class RoomApiTest {
         redis.opsForHash().put(RoomKeys.room(code), "expiresAt", String.valueOf(Instant.now().minusSeconds(1).toEpochMilli()));
         mvc.perform(get("/rooms/" + code).header("X-Participant-Token", room.get("participantToken").asText()))
                 .andExpect(status().isGone()).andExpect(jsonPath("$.code").value("ROOM_EXPIRED"));
+    }
+
+    @Test
+    void keysExpireWithinTtlPlusGrace() throws Exception {
+        String code = created().get("code").asText();
+        for (String key : RoomKeys.all(code)) {
+            assertThat(redis.getExpire(key)).isPositive().isLessThanOrEqualTo(7 * 3600);
+        }
     }
 }
