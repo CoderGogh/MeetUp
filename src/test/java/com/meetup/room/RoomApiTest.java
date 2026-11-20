@@ -85,4 +85,12 @@ class RoomApiTest {
                 .andExpect(jsonPath("$.participants[0].host").value(true))
                 .andExpect(jsonPath("$.hostTokenHash").doesNotExist());
     }
+
+    @Test
+    void rejectsMissingOrWrongToken() throws Exception {
+        String code = created().get("code").asText();
+        mvc.perform(get("/rooms/" + code)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/rooms/" + code).header("X-Participant-Token", "wrong"))
+                .andExpect(status().isUnauthorized());
+    }
 }
