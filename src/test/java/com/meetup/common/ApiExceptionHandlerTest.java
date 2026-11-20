@@ -38,6 +38,11 @@ class ApiExceptionHandlerTest {
         @GetMapping("/header")
         void header(@RequestHeader("Idempotency-Key") String key) {
         }
+
+        @GetMapping("/boom")
+        void boom() {
+            throw new IllegalStateException("db password=hunter2");
+        }
     }
 
     final MockMvc mvc = MockMvcBuilders.standaloneSetup(new Probe())
@@ -68,5 +73,12 @@ class ApiExceptionHandlerTest {
     void unreadableBodyIsBadRequest() throws Exception {
         mvc.perform(post("/validated").contentType(MediaType.APPLICATION_JSON).content("{"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
+    void unexpectedErrorHidesCause() throws Exception {
+        mvc.perform(get("/boom")).andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value("INTERNAL"))
+                .andExpect(jsonPath("$.message").value(ErrorCode.INTERNAL.message()));
     }
 }
