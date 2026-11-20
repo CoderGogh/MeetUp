@@ -2,12 +2,15 @@ package com.meetup.room;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetup.common.ApiException;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -38,5 +41,14 @@ class RoomStateMachineTest {
         } catch (ApiException e) {
             return e;
         }
+    }
+
+    @Test
+    void hostMovesForwardAndBumpsRev() {
+        String code = room();
+        RoomFixture.setState(redis, code, RoomState.REVIEWING);
+        Transition t = machine.fire(code, RoomTrigger.START_VOTING, Actor.HOST);
+        assertThat(t.state()).isEqualTo(RoomState.VOTING);
+        assertThat(t.roomRev()).isEqualTo(2);
     }
 }
