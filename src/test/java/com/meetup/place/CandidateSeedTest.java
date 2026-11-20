@@ -42,4 +42,11 @@ class CandidateSeedTest {
         String sql = "SELECT count(*) FROM candidate WHERE cardinality(theme_tags) = 0";
         assertThat(jdbc.queryForObject(sql, Integer.class)).isZero();
     }
+
+    @Test
+    void themeTagsAreKnown() {
+        var tags = jdbc.queryForList(
+                "SELECT DISTINCT unnest(theme_tags) FROM candidate", String.class);
+        assertThat(tags).allSatisfy(t -> Theme.valueOf(t));
+    }
 }
