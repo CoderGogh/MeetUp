@@ -39,4 +39,9 @@ class EstimateRouteClientTest {
         Route cityHall = client.find(gangnam, at(4, 37.5657, 126.9769));
         assertThat(cityHall.minutes()).isGreaterThan(samsung.minutes());
     }
+
+    @Test
+    void markedAsEstimate() {
+        assertThat(client.find(gangnam, at(4, 37.5657, 126.9769)).source()).isEqualTo(Route.Source.ESTIMATE);
+    }
 }
