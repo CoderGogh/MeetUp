@@ -85,6 +85,23 @@ public final class SubwayGraph {
         adj.get(a).add(new Edge(b, minutes, transfers));
     }
 
+    // 역별로 가장 빠른 노선 노드
+    private Map<String, Path> best(String origin, double[] dist, int[] hops) {
+        Map<String, Path> best = new HashMap<>();
+        for (int n = 0; n < dist.length; n++) {
+            if (dist[n] < Double.POSITIVE_INFINITY) {
+                best.merge(stationOf.get(n), new Path(dist[n], hops[n]),
+                        (x, y) -> x.minutes() <= y.minutes() ? x : y);
+            }
+        }
+        best.put(origin, new Path(0, 0));
+        return best;
+    }
+
+    /** 최단 경로 결과 */
+    public record Path(double minutes, int transfers) {
+    }
+
     private record Edge(int to, double minutes, int transfers) {
     }
 }
