@@ -20,3 +20,15 @@ data:{"code":"…","roomRev":2,"type":"participant.joined","payload":{"nickname"
 - `id`는 `roomRev`다. 방 안에서 이벤트마다 1씩 오른다
 - 클라이언트는 들고 있는 값 이하의 이벤트를 버린다. 순서가 뒤집혀 와도 화면이 과거로 돌아가지 않는다 (RFP 8.6.3)
 - `roomRev`를 올리는 코드는 반드시 이벤트를 같이 낸다
+
+## 이벤트 목록
+
+| type | 언제 | payload |
+|---|---|---|
+| `participant.joined` | 입장 | `nickname`, `count` |
+| `state.changed` | 상태 전이 | `from`, `to` |
+| `origin.submitted` | 출발지 입력 (4주차) | `nickname`, 입력 완료 수 |
+| `participant.left` | 퇴장 (4주차) | `nickname`, `count` |
+| `candidates.ready` · `vote.updated` · `draw.result` · `room.confirmed` | 5주차 | |
+
+전달 지연은 `DeliveryLatencyTest`로 잰다. 구독자 5명에게 입장 이벤트가 1초 안에 가야 통과 (NFR-06)
