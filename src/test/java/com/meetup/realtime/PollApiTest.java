@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,5 +51,10 @@ class PollApiTest {
                 .andExpect(jsonPath("$.resync").value(false)).andExpect(jsonPath("$.events.length()").value(2))
                 .andExpect(jsonPath("$.events[0].roomRev").value(2))
                 .andExpect(jsonPath("$.events[1].type").value("participant.joined"));
+    }
+
+    @Test
+    void responseIsNotCached() throws Exception {
+        poll(roomWithTwoJoins(), "3").andExpect(header().string("Cache-Control", "no-store"));
     }
 }
