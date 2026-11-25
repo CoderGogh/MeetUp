@@ -61,6 +61,11 @@ public final class RoomStream {
         return events.stream().allMatch(this::write);
     }
 
+    // 보관 범위 밖 재접속. 클라이언트는 GET /rooms/{code}로 다시 맞춤
+    boolean resync(long roomRev) {
+        return send(SseEmitter.event().name("resync").data(Map.of("roomRev", roomRev), MediaType.APPLICATION_JSON));
+    }
+
     // 연결 직후 현재 roomRev. ID가 없어 Last-Event-ID를 덮지 않음
     boolean ready(long roomRev) {
         return send(SseEmitter.event().name("ready").data(Map.of("roomRev", roomRev), MediaType.APPLICATION_JSON));
