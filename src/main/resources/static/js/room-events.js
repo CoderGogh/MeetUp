@@ -17,3 +17,43 @@ export function parseSseBlock(block) {
   out.data = data.join('\n');
   return out;
 }
+
+const FATAL = new Set([401, 403, 404, 410]);
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function connectRoomEvents({
+  code,
+  token,
+  lastRev = 0,
+  onEvent,
+  onResync = () => {},
+  onMode = () => {},
+  onError = () => {},
+  maxFailures = 3,
+  retryMs = 1000,
+  readyMs = 5000,
+  pollMs = 3000,
+  fetchImpl = (...args) => fetch(...args),
+}) {
+  let rev = lastRev;
+  let mode = 'sse';
+  let failures = 0;
+  let closed = false;
+  let controller = null;
+  let timer = null;
+
+  return {
+    get mode() {
+      return mode;
+    },
+    get rev() {
+      return rev;
+    },
+    close() {
+      closed = true;
+      if (controller) controller.abort();
+      clearTimeout(timer);
+    },
+  };
+}
