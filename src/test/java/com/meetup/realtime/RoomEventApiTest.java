@@ -1,15 +1,21 @@
 package com.meetup.realtime;
 
 import com.meetup.place.Theme;
+import com.meetup.room.Actor;
 import com.meetup.room.CreateRoomRequest;
 import com.meetup.room.CreatedRoom;
 import com.meetup.room.JoinRequest;
 import com.meetup.room.ParticipantService;
+import com.meetup.room.RoomKeys;
 import com.meetup.room.RoomService;
+import com.meetup.room.RoomState;
+import com.meetup.room.RoomStateMachine;
+import com.meetup.room.RoomTrigger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
@@ -33,6 +39,10 @@ class RoomEventApiTest {
     RoomService rooms;
     @Autowired
     ParticipantService participants;
+    @Autowired
+    RoomStateMachine machine;
+    @Autowired
+    StringRedisTemplate redis;
 
     CreatedRoom room() {
         return rooms.create(new CreateRoomRequest(Theme.CASUAL, 5, "방장"));
@@ -73,5 +83,16 @@ class RoomEventApiTest {
         participants.join(r.code(), new JoinRequest("준호"));
         assertThat(res.getContentAsString()).contains("id:2").contains("event:participant.joined")
                 .contains("\"count\":2");
+    }
+
+    @Test
+    void transitionIsBroadcast() throws Exception {
+        CreatedRoom r = room();
+        MockHttpServletResponse res = stream(r);
+        participants.join(r.code(), new JoinRequest("준호"));
+        redis.opsForHash().put(RoomKeys.room(r.code()), "state", RoomState.REVIEWING.name());
+        machine.fire(r.code(), RoomTrigger.START_VOTING, Actor.HOST);
+        assertThat(res.getContentAsString()).contains("id:3").contains("event:state.changed")
+                .contains("\"from\":\"REVIEWING\"").contains("\"to\":\"VOTING\"");
     }
 }
