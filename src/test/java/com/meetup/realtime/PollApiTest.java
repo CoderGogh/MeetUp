@@ -63,4 +63,10 @@ class PollApiTest {
         poll(roomWithTwoJoins(), "3").andExpect(jsonPath("$.events.length()").value(0))
                 .andExpect(jsonPath("$.resync").value(false));
     }
+
+    @Test
+    void nonNumericSinceIsBadRequest() throws Exception {
+        poll(roomWithTwoJoins(), "abc").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.fields.since").exists());
+    }
 }
