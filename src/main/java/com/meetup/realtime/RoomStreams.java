@@ -1,5 +1,6 @@
 package com.meetup.realtime;
 
+import com.meetup.room.RoomEvent;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,5 +34,9 @@ public class RoomStreams {
             set.remove(s);
             return set.isEmpty() ? null : set;
         });
+    }
+
+    public int count(String code) {
+        return rooms.getOrDefault(code, Set.of()).size();
     }
 }
