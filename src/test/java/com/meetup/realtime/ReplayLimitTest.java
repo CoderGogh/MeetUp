@@ -48,4 +48,10 @@ class ReplayLimitTest {
         assertThat(replay.resync()).isFalse();
         assertThat(replay.events()).extracting(RoomEvent::roomRev).containsExactly(3L, 4L, 5L);
     }
+
+    @Test
+    void beyondRetentionIsResync() {
+        CreatedRoom r = roomWithFourJoins();
+        assertThat(events.since(r.code(), 1, 5).resync()).isTrue();
+    }
 }
