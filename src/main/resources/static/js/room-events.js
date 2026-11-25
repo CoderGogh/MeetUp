@@ -109,6 +109,30 @@ export function connectRoomEvents({
     }
   }
 
+  async function pollOnce() {
+    const res = await fetchImpl(`/rooms/${code}/events?since=${rev}`, { headers: headers('application/json') });
+    if (FATAL.has(res.status)) return stop(res.status);
+    if (!res.ok) return;
+    const page = await res.json();
+    if (page.resync) resync(page.roomRev);
+    else page.events.forEach(accept);
+  }
+
+  function startPolling() {
+    mode = 'poll';
+    onMode('poll');
+    const tick = async () => {
+      if (closed) return;
+      try {
+        await pollOnce();
+      } catch {
+        // 다음 주기에 다시
+      }
+      if (!closed) timer = setTimeout(tick, pollMs);
+    };
+    tick();
+  }
+
   return {
     get mode() {
       return mode;
