@@ -1,0 +1,31 @@
+package com.meetup.realtime;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+/** 실서버 SSE 구독 (테스트용). 받은 줄을 큐에 쌓음 */
+final class SseClient implements AutoCloseable {
+
+    private static final HttpClient HTTP = HttpClient.newHttpClient();
+
+    private final BlockingQueue<String> lines = new LinkedBlockingQueue<>();
+    private final InputStream body;
+
+    SseClient(int port, String code, String token) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/rooms/" + code
+                + "/events")).header("Accept", "text/event-stream").header("X-Participant-Token", token).build();
+        body = HTTP.send(req, HttpResponse.BodyHandlers.ofInputStream()).body();
+    }
+
+    // 강제 단절
+    @Override
+    public void close() throws IOException {
+        body.close();
+    }
+}
