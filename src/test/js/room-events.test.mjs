@@ -57,3 +57,21 @@ test('재접속 때 Last-Event-ID로 가진 rev 전송', async () => {
   assert.equal(sent['Last-Event-ID'], '5');
   assert.equal(sent['X-Participant-Token'], 't');
 });
+
+test('SSE가 연달아 실패하면 폴링으로 강등', async () => {
+  const calls = [];
+  const got = [];
+  let mode;
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (!url.includes('since=')) return new Response('', { status: 502 });
+    return json({ roomRev: 2, resync: false, events: [{ roomRev: 2, type: 'participant.joined', payload: {} }] });
+  };
+  const c = connectRoomEvents({ code: 'C', token: 't', lastRev: 1, onEvent: (e) => got.push(e.roomRev),
+    onMode: (m) => { mode = m; }, retryMs: 1, pollMs: 10, fetchImpl });
+  await until(() => got.length === 1);
+  c.close();
+  assert.equal(mode, 'poll');
+  assert.equal(calls.filter((u) => !u.includes('since=')).length, 3);
+  assert.ok(calls.includes('/rooms/C/events?since=1'));
+});
