@@ -4,6 +4,7 @@ import com.meetup.room.RoomEvent;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -43,6 +44,16 @@ public class RoomStreams {
                 remove(s);
             }
         }
+    }
+
+    // 주기적 주석 전송으로 끊긴 연결 정리
+    @Scheduled(fixedRateString = "${meetup.realtime.heartbeat:PT20S}")
+    void heartbeat() {
+        rooms.values().forEach(set -> set.forEach(s -> {
+            if (!s.ping()) {
+                remove(s);
+            }
+        }));
     }
 
     public int count(String code) {
