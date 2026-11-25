@@ -4,6 +4,7 @@ import com.meetup.common.ApiException;
 import com.meetup.common.ErrorCode;
 import com.meetup.room.RoomService;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -23,17 +24,21 @@ public class RoomEventService {
         this.events = events;
     }
 
+    private static long number(String raw, Supplier<ApiException> invalid) {
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException | NullPointerException e) {
+            throw invalid.get();
+        }
+    }
+
     // 없으면 null, 숫자가 아니면 400
     static Long lastEventId(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
         }
-        try {
-            return Long.parseLong(raw.trim());
-        } catch (NumberFormatException e) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST, "Last-Event-ID는 숫자입니다",
-                    Map.of("header", LAST_EVENT_ID));
-        }
+        return number(raw, () -> new ApiException(ErrorCode.INVALID_REQUEST, "Last-Event-ID는 숫자입니다",
+                Map.of("header", LAST_EVENT_ID)));
     }
 
     // 등록 뒤에 roomRev를 읽어 그 사이 이벤트를 놓치지 않음
