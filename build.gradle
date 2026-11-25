@@ -33,3 +33,20 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// 웹 클라이언트 스크립트 테스트 (Node 22+)
+def jsTest = tasks.register('jsTest', Exec) {
+    group = 'verification'
+    inputs.dir 'src/main/resources/static/js'
+    inputs.dir 'src/test/js'
+    def ok = layout.buildDirectory.file('js-test/ok')
+    outputs.file ok
+    commandLine 'node', '--test', 'src/test/js/*.test.mjs'
+    doLast {
+        ok.get().asFile.text = 'ok'
+    }
+}
+
+tasks.named('check') {
+    dependsOn jsTest
+}
