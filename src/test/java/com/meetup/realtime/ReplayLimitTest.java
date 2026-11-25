@@ -6,10 +6,12 @@ import com.meetup.room.CreatedRoom;
 import com.meetup.room.JoinRequest;
 import com.meetup.room.ParticipantService;
 import com.meetup.room.RoomEvent;
+import com.meetup.room.RoomKeys;
 import com.meetup.room.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +27,8 @@ class ReplayLimitTest {
     ParticipantService participants;
     @Autowired
     RoomEventLog events;
+    @Autowired
+    StringRedisTemplate redis;
 
     // 방장 + 4명 입장 → rev 2~5 이벤트
     CreatedRoom roomWithFourJoins() {
@@ -61,5 +65,12 @@ class ReplayLimitTest {
         Replay replay = events.since(r.code(), 5, 5);
         assertThat(replay.resync()).isFalse();
         assertThat(replay.events()).isEmpty();
+    }
+
+    @Test
+    void eventsExpireWithRoom() {
+        CreatedRoom r = roomWithFourJoins();
+        Long room = redis.getExpire(RoomKeys.room(r.code()));
+        assertThat(redis.getExpire(RoomKeys.events(r.code()))).isPositive().isLessThanOrEqualTo(room);
     }
 }
