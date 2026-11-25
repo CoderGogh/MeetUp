@@ -41,3 +41,10 @@ data:{"code":"…","roomRev":2,"type":"participant.joined","payload":{"nickname"
 | `candidates.ready` · `vote.updated` · `draw.result` · `room.confirmed` | 5주차 | |
 
 전달 지연은 `DeliveryLatencyTest`로 잰다. 구독자 5명에게 입장 이벤트가 1초 안에 가야 통과 (NFR-06)
+
+## 이벤트 보관
+
+- Redis `room:{코드}:events` 정렬 집합. 점수가 `roomRev`, 값이 이벤트 JSON
+- 방별 최근 200개(`meetup.realtime.retained-events`)만 남긴다. 방 키와 같은 시각에 만료
+- 보관과 전파는 같은 리스너에서 보관 → 전파 순. 보관이 실패해도 전파는 하고, 그 구간은 재접속 때 `resync`로 메운다
+- 끊김 검증은 `ReconnectTest`. 실제 연결을 끊고 그 사이 입장·전이를 낸 뒤 재접속해 다 받는지, 최종 `roomRev`·단계·인원이 같은지 본다 (NFR-07)
