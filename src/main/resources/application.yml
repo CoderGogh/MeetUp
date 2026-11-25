@@ -31,3 +31,6 @@ meetup:
     max-participants: 10
     expired-grace: PT1H
     invite-base-url: ${INVITE_BASE_URL:http://localhost:8080}
+  realtime:
+    emitter-timeout: PT30M
+    heartbeat: PT20S
