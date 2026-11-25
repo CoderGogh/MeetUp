@@ -34,3 +34,4 @@ meetup:
   realtime:
     emitter-timeout: PT30M
     heartbeat: PT20S
+    retained-events: 200
