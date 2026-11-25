@@ -57,4 +57,10 @@ class PollApiTest {
     void responseIsNotCached() throws Exception {
         poll(roomWithTwoJoins(), "3").andExpect(header().string("Cache-Control", "no-store"));
     }
+
+    @Test
+    void upToDateIsEmpty() throws Exception {
+        poll(roomWithTwoJoins(), "3").andExpect(jsonPath("$.events.length()").value(0))
+                .andExpect(jsonPath("$.resync").value(false));
+    }
 }
