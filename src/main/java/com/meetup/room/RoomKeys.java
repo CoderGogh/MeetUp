@@ -24,6 +24,11 @@ public final class RoomKeys {
         return room(code) + ":tokens";
     }
 
+    // 최근 이벤트 (재접속 재전송용)
+    public static String events(String code) {
+        return room(code) + ":events";
+    }
+
     public static List<String> all(String code) {
         return List.of(room(code), participants(code), nicknames(code), tokens(code));
     }
