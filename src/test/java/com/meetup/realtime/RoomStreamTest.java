@@ -56,4 +56,14 @@ class RoomStreamTest {
         stream.start();
         assertThat(out.ids).containsExactly(6L, 7L);
     }
+
+    @Test
+    void staleLiveEventIsSkipped() {
+        stream.skipUpTo(5);
+        stream.send(event(4));
+        stream.start();
+        stream.send(event(6));
+        stream.send(event(5));
+        assertThat(out.ids).containsExactly(6L);
+    }
 }
