@@ -2,6 +2,7 @@ package com.meetup.realtime;
 
 import com.meetup.room.RoomEvent;
 import java.io.IOException;
+import java.util.Map;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -43,5 +44,15 @@ public final class RoomStream {
     boolean send(RoomEvent e) {
         return send(SseEmitter.event().id(String.valueOf(e.roomRev())).name(e.type())
                 .data(e, MediaType.APPLICATION_JSON));
+    }
+
+    // 연결 직후 현재 roomRev. ID가 없어 Last-Event-ID를 덮지 않음
+    boolean ready(long roomRev) {
+        return send(SseEmitter.event().name("ready").data(Map.of("roomRev", roomRev), MediaType.APPLICATION_JSON));
+    }
+
+    // 프록시 유휴 끊김 방지·끊긴 연결 감지
+    boolean ping() {
+        return send(SseEmitter.event().comment("ping"));
     }
 }
