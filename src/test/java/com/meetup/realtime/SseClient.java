@@ -1,11 +1,14 @@
 package com.meetup.realtime;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -21,6 +24,19 @@ final class SseClient implements AutoCloseable {
         HttpRequest req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/rooms/" + code
                 + "/events")).header("Accept", "text/event-stream").header("X-Participant-Token", token).build();
         body = HTTP.send(req, HttpResponse.BodyHandlers.ofInputStream()).body();
+        Thread reader = new Thread(this::read);
+        reader.setDaemon(true);
+        reader.start();
+    }
+
+    private void read() {
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(body, StandardCharsets.UTF_8))) {
+            for (String l = r.readLine(); l != null; l = r.readLine()) {
+                lines.add(l);
+            }
+        } catch (IOException ignored) {
+            // 닫으면 끝
+        }
     }
 
     // 강제 단절
