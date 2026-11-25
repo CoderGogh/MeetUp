@@ -18,6 +18,16 @@
 - 숫자가 아닌 값은 400 (`details.header`)
 - 재전송이 끝나기 전에 온 실시간 이벤트는 쌓아 뒀다가 `ready` 뒤에 rev 순으로 보낸다. 이미 보낸 rev 이하는 건너뛴다. 그래서 재전송 3·4보다 실시간 5가 먼저 나가 클라이언트가 3·4를 버리는 일이 없다
 
+## 폴링 강등
+
+회사망 프록시처럼 SSE를 막거나 버퍼링하는 환경에서는 폴링으로 내려간다 (RFP 6.8)
+
+`GET /rooms/{code}/events?since={roomRev}` · 헤더 `X-Participant-Token` → 200 `{roomRev, resync, events[]}`
+
+- `since`보다 큰 이벤트를 rev 순으로 준다. 최신이면 빈 목록
+- 보관 범위 밖이면 `resync: true`, 목록은 비움. SSE의 `resync`와 같다
+- `Cache-Control: no-store`. 숫자가 아닌 `since`는 400 (`details.fields.since`)
+
 ## 이벤트 형식
 
 ```
