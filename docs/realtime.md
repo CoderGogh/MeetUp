@@ -28,6 +28,24 @@
 - 보관 범위 밖이면 `resync: true`, 목록은 비움. SSE의 `resync`와 같다
 - `Cache-Control: no-store`. 숫자가 아닌 `since`는 400 (`details.fields.since`)
 
+### 클라이언트 (`/js/room-events.js`)
+
+```js
+import { connectRoomEvents } from '/js/room-events.js';
+
+const events = connectRoomEvents({
+  code, token, lastRev: room.roomRev,
+  onEvent: (e) => render(e),
+  onResync: () => reloadRoom(),
+  onMode: (mode) => showBadge(mode), // 'poll'
+});
+```
+
+- `EventSource`는 토큰 헤더를 못 실어 `fetch` 스트림으로 SSE를 읽는다
+- 끊기면 1초·2초 간격으로 다시 붙고, 3번 연달아 실패하면 3초 주기 폴링으로 바꾼다. 연결은 됐는데 5초 안에 `ready`가 안 오면(버퍼링 프록시) 실패로 센다
+- 401·403·404·410은 재시도하지 않고 `onError`로 알린다
+- 테스트는 `node --test src/test/js/*.test.mjs` (Node 22+). `./gradlew check`가 `jsTest`로 같이 돌린다
+
 ## 이벤트 형식
 
 ```
