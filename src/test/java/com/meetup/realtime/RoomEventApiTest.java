@@ -127,4 +127,12 @@ class RoomEventApiTest {
         participants.join(r.code(), new JoinRequest("준호"));
         assertThat(resume(r, "2").getContentAsString()).doesNotContain("id:").contains("event:ready");
     }
+
+    @Test
+    void nonNumericLastEventIdIsBadRequest() throws Exception {
+        CreatedRoom r = room();
+        mvc.perform(get("/rooms/" + r.code() + "/events").header("X-Participant-Token", r.participantToken())
+                .header("Last-Event-ID", "abc")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.header").value("Last-Event-ID"));
+    }
 }
