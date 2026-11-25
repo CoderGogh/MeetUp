@@ -43,16 +43,22 @@ public class RoomEventService {
         Long after = lastEventId(lastEventId);
         RoomStream s = streams.open(code, me);
         long rev = rooms.load(code).rev();
-        if (after != null) {
+        if (after == null) {
+            s.skipUpTo(rev);
+        } else {
+            s.skipUpTo(after);
             catchUp(s, events.since(code, after, rev));
         }
         s.ready(rev);
+        s.start();
         return s.emitter();
     }
 
+    // 재조회 안내면 그 rev까지는 보내지 않음
     private static void catchUp(RoomStream s, Replay r) {
         if (r.resync()) {
             s.resync(r.roomRev());
+            s.skipUpTo(r.roomRev());
         } else {
             s.replay(r.events());
         }

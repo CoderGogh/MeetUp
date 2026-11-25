@@ -2,12 +2,14 @@ package com.meetup.realtime;
 
 import com.meetup.room.RoomEvent;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-/** SSE 연결 하나. 이벤트 ID = roomRev */
+/** SSE 연결 하나. 이벤트 ID = roomRev. 재전송이 끝나기 전 실시간 이벤트는 쌓았다가 순서대로 */
 public final class RoomStream {
 
     private final String code;
@@ -15,6 +17,7 @@ public final class RoomStream {
     private final SseEmitter emitter;
     private final Object lock = new Object();
     private long sent;
+    private List<RoomEvent> pending = new ArrayList<>();
 
     RoomStream(String code, String participantId, SseEmitter emitter) {
         this.code = code;
@@ -58,9 +61,29 @@ public final class RoomStream {
         return write(e);
     }
 
+    // 구독 시작 전이면 쌓아 둠
     boolean send(RoomEvent e) {
         synchronized (lock) {
+            if (pending != null) {
+                return pending.add(e);
+            }
             return emit(e);
+        }
+    }
+
+    // 클라이언트가 roomRev까지 가졌거나 재조회로 맞출 때
+    void skipUpTo(long roomRev) {
+        synchronized (lock) {
+            sent = Math.max(sent, roomRev);
+        }
+    }
+
+    // 재전송·ready 뒤에 쌓인 실시간 이벤트를 rev 순으로
+    boolean start() {
+        synchronized (lock) {
+            List<RoomEvent> held = pending;
+            pending = null;
+            return held.stream().sorted(Comparator.comparingLong(RoomEvent::roomRev)).allMatch(this::emit);
         }
     }
 
