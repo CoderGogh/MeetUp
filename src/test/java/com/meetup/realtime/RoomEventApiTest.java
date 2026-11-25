@@ -3,6 +3,8 @@ package com.meetup.realtime;
 import com.meetup.place.Theme;
 import com.meetup.room.CreateRoomRequest;
 import com.meetup.room.CreatedRoom;
+import com.meetup.room.JoinRequest;
+import com.meetup.room.ParticipantService;
 import com.meetup.room.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,8 @@ class RoomEventApiTest {
     MockMvc mvc;
     @Autowired
     RoomService rooms;
+    @Autowired
+    ParticipantService participants;
 
     CreatedRoom room() {
         return rooms.create(new CreateRoomRequest(Theme.CASUAL, 5, "방장"));
@@ -60,5 +64,14 @@ class RoomEventApiTest {
     void subscribeSendsReadyWithRoomRev() throws Exception {
         CreatedRoom r = room();
         assertThat(stream(r).getContentAsString()).contains("event:ready").contains("\"roomRev\":1");
+    }
+
+    @Test
+    void joinIsBroadcast() throws Exception {
+        CreatedRoom r = room();
+        MockHttpServletResponse res = stream(r);
+        participants.join(r.code(), new JoinRequest("준호"));
+        assertThat(res.getContentAsString()).contains("id:2").contains("event:participant.joined")
+                .contains("\"count\":2");
     }
 }
