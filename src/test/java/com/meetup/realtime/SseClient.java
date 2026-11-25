@@ -23,9 +23,17 @@ final class SseClient implements AutoCloseable {
     private final InputStream body;
 
     SseClient(int port, String code, String token) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/rooms/" + code
-                + "/events")).header("Accept", "text/event-stream").header("X-Participant-Token", token).build();
-        body = HTTP.send(req, HttpResponse.BodyHandlers.ofInputStream()).body();
+        this(port, code, token, null);
+    }
+
+    // lastEventId가 있으면 재접속
+    SseClient(int port, String code, String token, String lastEventId) throws Exception {
+        HttpRequest.Builder req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/rooms/" + code
+                + "/events")).header("Accept", "text/event-stream").header("X-Participant-Token", token);
+        if (lastEventId != null) {
+            req.header("Last-Event-ID", lastEventId);
+        }
+        body = HTTP.send(req.build(), HttpResponse.BodyHandlers.ofInputStream()).body();
         Thread reader = new Thread(this::read);
         reader.setDaemon(true);
         reader.start();
