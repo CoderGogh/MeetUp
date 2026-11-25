@@ -65,4 +65,14 @@ class MultiInstanceTest {
             assertThat(onA.await("id:2", LIMIT)).isNotNull();
         }
     }
+
+    @Test
+    void sameInstanceReceivesOnce() throws Exception {
+        CreatedRoom r = room();
+        try (SseClient onA = new SseClient(port, r.code(), r.participantToken())) {
+            participants.join(r.code(), new JoinRequest("준호"));
+            assertThat(onA.await("id:2", LIMIT)).isNotNull();
+            assertThat(onA.await("id:2", Duration.ofMillis(300))).isNull();
+        }
+    }
 }
