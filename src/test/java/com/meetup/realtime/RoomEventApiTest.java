@@ -41,4 +41,10 @@ class RoomEventApiTest {
         subscribe(room().code(), null).andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
+
+    @Test
+    void unknownRoomIsNotFound() throws Exception {
+        subscribe("ABCDEFGHJKMN", "x").andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ROOM_NOT_FOUND"));
+    }
 }
