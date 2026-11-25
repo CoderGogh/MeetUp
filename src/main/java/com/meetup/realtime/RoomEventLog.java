@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meetup.room.RoomEvent;
 import com.meetup.room.RoomKeys;
 import java.util.List;
+import java.util.Set;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -35,10 +36,24 @@ public class RoomEventLog {
         }
     }
 
+    private RoomEvent read(String raw) {
+        try {
+            return json.readValue(raw, RoomEvent.class);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
     // 방이 이미 사라졌으면 false
     public boolean append(RoomEvent e) {
         Long kept = redis.execute(APPEND, List.of(RoomKeys.events(e.code()), RoomKeys.room(e.code())),
                 String.valueOf(e.roomRev()), write(e), String.valueOf(props.retainedEvents()));
         return Long.valueOf(1).equals(kept);
+    }
+
+    // rev가 after보다 큰 이벤트, rev 순
+    public List<RoomEvent> after(String code, long after) {
+        Set<String> raw = redis.opsForZSet().rangeByScore(RoomKeys.events(code), after + 1, Double.MAX_VALUE);
+        return raw == null ? List.of() : raw.stream().map(this::read).toList();
     }
 }
