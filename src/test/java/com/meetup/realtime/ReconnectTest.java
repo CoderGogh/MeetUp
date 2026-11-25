@@ -1,6 +1,8 @@
 package com.meetup.realtime;
 
+import com.meetup.place.Theme;
 import com.meetup.room.Actor;
+import com.meetup.room.CreateRoomRequest;
 import com.meetup.room.CreatedRoom;
 import com.meetup.room.JoinRequest;
 import com.meetup.room.ParticipantService;
@@ -9,7 +11,9 @@ import com.meetup.room.RoomService;
 import com.meetup.room.RoomState;
 import com.meetup.room.RoomStateMachine;
 import com.meetup.room.RoomTrigger;
+import com.meetup.room.RoomView;
 import java.time.Duration;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -49,5 +53,23 @@ class ReconnectTest {
         participants.join(code, new JoinRequest("서연"));
         redis.opsForHash().put(RoomKeys.room(code), "state", RoomState.REVIEWING.name());
         machine.fire(code, RoomTrigger.START_VOTING, Actor.HOST);
+    }
+
+    @Test
+    void missedEventsArriveAfterForcedDisconnect() throws Exception {
+        CreatedRoom r = rooms.create(new CreateRoomRequest(Theme.CASUAL, 5, "방장"));
+        receiveThenDrop(r);
+        changeWhileAway(r.code());
+
+        try (SseClient again = new SseClient(port, r.code(), r.participantToken(), "2")) {
+            assertThat(again.await("id:3", WAIT)).isNotNull();
+            assertThat(again.await("\"count\":3", WAIT)).isNotNull();
+            assertThat(again.await("id:4", WAIT)).isNotNull();
+            assertThat(again.await("\"to\":\"VOTING\"", WAIT)).isNotNull();
+        }
+        RoomView now = rooms.view(r.code(), r.participantToken());
+        assertThat(now.roomRev()).isEqualTo(4);
+        assertThat(now.state()).isEqualTo(RoomState.VOTING);
+        assertThat(now.participants()).hasSize(3);
     }
 }
