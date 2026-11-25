@@ -53,6 +53,13 @@ class RoomEventApiTest {
                 .header("X-Participant-Token", token == null ? "" : token));
     }
 
+    // 마지막으로 받은 이벤트 ID를 들고 재접속
+    MockHttpServletResponse resume(CreatedRoom r, String lastEventId) throws Exception {
+        return mvc.perform(get("/rooms/" + r.code() + "/events").accept(MediaType.TEXT_EVENT_STREAM)
+                .header("X-Participant-Token", r.participantToken()).header("Last-Event-ID", lastEventId))
+                .andExpect(request().asyncStarted()).andReturn().getResponse();
+    }
+
     MockHttpServletResponse stream(CreatedRoom r) throws Exception {
         return subscribe(r.code(), r.participantToken()).andExpect(request().asyncStarted()).andReturn()
                 .getResponse();
@@ -102,5 +109,15 @@ class RoomEventApiTest {
         MockHttpServletResponse res = stream(mine);
         participants.join(room().code(), new JoinRequest("준호"));
         assertThat(res.getContentAsString()).doesNotContain("participant.joined");
+    }
+
+    @Test
+    void reconnectReplaysMissedEvents() throws Exception {
+        CreatedRoom r = room();
+        participants.join(r.code(), new JoinRequest("준호"));
+        participants.join(r.code(), new JoinRequest("서연"));
+        String body = resume(r, "1").getContentAsString();
+        assertThat(body).contains("id:2").contains("id:3").contains("event:ready");
+        assertThat(body.indexOf("id:2")).isLessThan(body.indexOf("id:3"));
     }
 }
