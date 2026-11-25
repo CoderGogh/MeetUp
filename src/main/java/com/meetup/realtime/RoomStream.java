@@ -2,7 +2,10 @@ package com.meetup.realtime;
 
 import com.meetup.room.RoomEvent;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -12,6 +15,7 @@ public final class RoomStream {
     private final String code;
     private final String participantId;
     private final SseEmitter emitter;
+    private final Set<Long> replayed = ConcurrentHashMap.newKeySet();
 
     RoomStream(String code, String participantId, SseEmitter emitter) {
         this.code = code;
@@ -46,8 +50,15 @@ public final class RoomStream {
                 .data(e, MediaType.APPLICATION_JSON));
     }
 
+    // 재전송한 이벤트가 실시간으로 또 오면 건너뜀
     boolean send(RoomEvent e) {
-        return write(e);
+        return replayed.remove(e.roomRev()) || write(e);
+    }
+
+    // 먼저 표시해 두고 보냄 (등록과 조회 사이에 온 실시간 이벤트와 중복 방지)
+    boolean replay(List<RoomEvent> events) {
+        events.forEach(e -> replayed.add(e.roomRev()));
+        return events.stream().allMatch(this::write);
     }
 
     // 연결 직후 현재 roomRev. ID가 없어 Last-Event-ID를 덮지 않음
