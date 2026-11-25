@@ -77,6 +77,38 @@ export function connectRoomEvents({
     }
   };
 
+  // 연결 하나. 끊기면 반환, 응답 오류는 throw
+  async function stream() {
+    controller = new AbortController();
+    const h = headers('text/event-stream');
+    if (rev > 0) h['Last-Event-ID'] = String(rev);
+    const res = await fetchImpl(`/rooms/${code}/events`, { headers: h, signal: controller.signal });
+    if (FATAL.has(res.status)) return stop(res.status);
+    if (!res.ok || !res.body) throw new Error(`sse ${res.status}`);
+    // 버퍼링 프록시는 연결만 되고 이벤트가 안 옴 → ready 시간 초과로 끊음
+    const guard = setTimeout(() => controller.abort(), readyMs);
+    const ready = () => {
+      clearTimeout(guard);
+      failures = 0;
+    };
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) return;
+        buf += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+        for (let i = buf.indexOf('\n\n'); i >= 0; i = buf.indexOf('\n\n')) {
+          dispatch(parseSseBlock(buf.slice(0, i)), ready);
+          buf = buf.slice(i + 2);
+        }
+      }
+    } finally {
+      clearTimeout(guard);
+    }
+  }
+
   return {
     get mode() {
       return mode;
