@@ -95,4 +95,12 @@ class RoomEventApiTest {
         assertThat(res.getContentAsString()).contains("id:3").contains("event:state.changed")
                 .contains("\"from\":\"REVIEWING\"").contains("\"to\":\"VOTING\"");
     }
+
+    @Test
+    void otherRoomEventIsNotReceived() throws Exception {
+        CreatedRoom mine = room();
+        MockHttpServletResponse res = stream(mine);
+        participants.join(room().code(), new JoinRequest("준호"));
+        assertThat(res.getContentAsString()).doesNotContain("participant.joined");
+    }
 }
