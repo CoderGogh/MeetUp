@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,8 +19,10 @@ public class ApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
+    // Accept가 text/event-stream이어도 JSON으로 (SSE 구독 실패)
     private static ResponseEntity<ErrorResponse> respond(ErrorCode code, String message, Map<String, Object> details) {
-        return ResponseEntity.status(code.status()).body(ErrorResponse.of(code, message, details));
+        return ResponseEntity.status(code.status()).contentType(MediaType.APPLICATION_JSON)
+                .body(ErrorResponse.of(code, message, details));
     }
 
     @ExceptionHandler(ApiException.class)
