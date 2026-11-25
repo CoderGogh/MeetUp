@@ -47,4 +47,13 @@ class RoomStreamTest {
         stream.start();
         assertThat(out.ids).containsExactly(3L, 4L, 5L);
     }
+
+    @Test
+    void heldEventsGoOutInRevOrder() {
+        stream.send(event(7));
+        stream.send(event(6));
+        stream.skipUpTo(5);
+        stream.start();
+        assertThat(out.ids).containsExactly(6L, 7L);
+    }
 }
