@@ -17,9 +17,21 @@ public class RoomStreams {
         this.props = props;
     }
 
+    // 완료·시간 초과·오류 시 자동 정리
     public RoomStream open(String code, String participantId) {
         RoomStream s = new RoomStream(code, participantId, new SseEmitter(props.emitterTimeout().toMillis()));
         rooms.computeIfAbsent(code, k -> ConcurrentHashMap.newKeySet()).add(s);
+        s.emitter().onCompletion(() -> remove(s));
+        s.emitter().onTimeout(() -> remove(s));
+        s.emitter().onError(e -> remove(s));
         return s;
+    }
+
+    // 마지막 연결이 빠지면 방 항목도 제거
+    void remove(RoomStream s) {
+        rooms.computeIfPresent(s.code(), (k, set) -> {
+            set.remove(s);
+            return set.isEmpty() ? null : set;
+        });
     }
 }
