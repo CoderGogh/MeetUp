@@ -7,8 +7,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** 재전송·실시간 이벤트 순서 */
 class RoomStreamTest {
@@ -36,4 +38,13 @@ class RoomStreamTest {
 
     final Recorder out = new Recorder();
     final RoomStream stream = new RoomStream("C", "p", out);
+
+    @Test
+    void liveEventDuringReplayComesAfterIt() {
+        stream.send(event(5));
+        stream.skipUpTo(2);
+        stream.replay(List.of(event(3), event(4), event(5)));
+        stream.start();
+        assertThat(out.ids).containsExactly(3L, 4L, 5L);
+    }
 }
