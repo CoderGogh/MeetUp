@@ -4,8 +4,6 @@ import com.meetup.room.RoomEvent;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -15,7 +13,8 @@ public final class RoomStream {
     private final String code;
     private final String participantId;
     private final SseEmitter emitter;
-    private final Set<Long> replayed = ConcurrentHashMap.newKeySet();
+    private final Object lock = new Object();
+    private long sent;
 
     RoomStream(String code, String participantId, SseEmitter emitter) {
         this.code = code;
@@ -50,15 +49,25 @@ public final class RoomStream {
                 .data(e, MediaType.APPLICATION_JSON));
     }
 
-    // 재전송한 이벤트가 실시간으로 또 오면 건너뜀
-    boolean send(RoomEvent e) {
-        return replayed.remove(e.roomRev()) || write(e);
+    // 보낸 rev 이하는 건너뜀 (재전송과 겹친 실시간 이벤트, 클라이언트도 버릴 이벤트)
+    private boolean emit(RoomEvent e) {
+        if (e.roomRev() <= sent) {
+            return true;
+        }
+        sent = e.roomRev();
+        return write(e);
     }
 
-    // 먼저 표시해 두고 보냄 (등록과 조회 사이에 온 실시간 이벤트와 중복 방지)
+    boolean send(RoomEvent e) {
+        synchronized (lock) {
+            return emit(e);
+        }
+    }
+
     boolean replay(List<RoomEvent> events) {
-        events.forEach(e -> replayed.add(e.roomRev()));
-        return events.stream().allMatch(this::write);
+        synchronized (lock) {
+            return events.stream().allMatch(this::emit);
+        }
     }
 
     // 보관 범위 밖 재접속. 클라이언트는 GET /rooms/{code}로 다시 맞춤
