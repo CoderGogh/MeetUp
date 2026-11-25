@@ -54,4 +54,12 @@ class ReplayLimitTest {
         CreatedRoom r = roomWithFourJoins();
         assertThat(events.since(r.code(), 1, 5).resync()).isTrue();
     }
+
+    @Test
+    void upToDateIsNeitherReplayNorResync() {
+        CreatedRoom r = roomWithFourJoins();
+        Replay replay = events.since(r.code(), 5, 5);
+        assertThat(replay.resync()).isFalse();
+        assertThat(replay.events()).isEmpty();
+    }
 }
