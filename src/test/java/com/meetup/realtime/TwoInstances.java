@@ -11,9 +11,10 @@ final class TwoInstances {
     private TwoInstances() {
     }
 
+    // 명령행 인자로 넘겨 application.yml 값보다 우선
     static ConfigurableApplicationContext start(String broadcast) {
         return new SpringApplicationBuilder(MeetupApplication.class).profiles("test")
-                .properties("server.port=0", "meetup.realtime.broadcast=" + broadcast).run();
+                .run("--server.port=0", "--meetup.realtime.broadcast=" + broadcast);
     }
 
     static int port(ConfigurableApplicationContext ctx) {
