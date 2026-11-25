@@ -60,6 +60,15 @@ class RoomEventApiTest {
                 .andExpect(request().asyncStarted()).andReturn().getResponse();
     }
 
+    // Pub/Sub 전파는 비동기. text가 올 때까지 최대 2초
+    static String waitFor(MockHttpServletResponse res, String text) throws Exception {
+        long end = System.nanoTime() + 2_000_000_000L;
+        while (!res.getContentAsString().contains(text) && System.nanoTime() < end) {
+            Thread.sleep(10);
+        }
+        return res.getContentAsString();
+    }
+
     MockHttpServletResponse stream(CreatedRoom r) throws Exception {
         return subscribe(r.code(), r.participantToken()).andExpect(request().asyncStarted()).andReturn()
                 .getResponse();
@@ -88,7 +97,7 @@ class RoomEventApiTest {
         CreatedRoom r = room();
         MockHttpServletResponse res = stream(r);
         participants.join(r.code(), new JoinRequest("준호"));
-        assertThat(res.getContentAsString()).contains("id:2").contains("event:participant.joined")
+        assertThat(waitFor(res, "준호")).contains("id:2").contains("event:participant.joined")
                 .contains("\"count\":2");
     }
 
@@ -99,7 +108,7 @@ class RoomEventApiTest {
         participants.join(r.code(), new JoinRequest("준호"));
         redis.opsForHash().put(RoomKeys.room(r.code()), "state", RoomState.REVIEWING.name());
         machine.fire(r.code(), RoomTrigger.START_VOTING, Actor.HOST);
-        assertThat(res.getContentAsString()).contains("id:3").contains("event:state.changed")
+        assertThat(waitFor(res, "VOTING")).contains("id:3").contains("event:state.changed")
                 .contains("\"from\":\"REVIEWING\"").contains("\"to\":\"VOTING\"");
     }
 
@@ -107,8 +116,9 @@ class RoomEventApiTest {
     void otherRoomEventIsNotReceived() throws Exception {
         CreatedRoom mine = room();
         MockHttpServletResponse res = stream(mine);
-        participants.join(room().code(), new JoinRequest("준호"));
-        assertThat(res.getContentAsString()).doesNotContain("participant.joined");
+        participants.join(room().code(), new JoinRequest("다른방"));
+        participants.join(mine.code(), new JoinRequest("준호"));
+        assertThat(waitFor(res, "준호")).doesNotContain("다른방");
     }
 
     @Test
