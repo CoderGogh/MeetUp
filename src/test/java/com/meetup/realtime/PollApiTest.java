@@ -6,6 +6,7 @@ import com.meetup.room.CreatedRoom;
 import com.meetup.room.JoinRequest;
 import com.meetup.room.ParticipantService;
 import com.meetup.room.RoomService;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** SSE 차단 시 폴링 (RFP 6.8) */
 @SpringBootTest
@@ -39,5 +42,13 @@ class PollApiTest {
     ResultActions poll(CreatedRoom r, String since) throws Exception {
         return mvc.perform(get("/rooms/" + r.code() + "/events").param("since", since)
                 .header("X-Participant-Token", r.participantToken()));
+    }
+
+    @Test
+    void returnsEventsAfterSince() throws Exception {
+        poll(roomWithTwoJoins(), "1").andExpect(status().isOk()).andExpect(jsonPath("$.roomRev").value(3))
+                .andExpect(jsonPath("$.resync").value(false)).andExpect(jsonPath("$.events.length()").value(2))
+                .andExpect(jsonPath("$.events[0].roomRev").value(2))
+                .andExpect(jsonPath("$.events[1].type").value("participant.joined"));
     }
 }
