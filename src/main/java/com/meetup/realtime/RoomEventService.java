@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-/** 방 이벤트 구독 (참여자만) */
+/** 방 이벤트 구독 (참여자만). Last-Event-ID가 있으면 끊긴 동안의 이벤트부터 */
 @Service
 public class RoomEventService {
 
@@ -37,11 +37,16 @@ public class RoomEventService {
     }
 
     // 등록 뒤에 roomRev를 읽어 그 사이 이벤트를 놓치지 않음
-    public SseEmitter subscribe(String code, String participantToken) {
+    public SseEmitter subscribe(String code, String participantToken, String lastEventId) {
         rooms.load(code);
         String me = rooms.authenticate(code, participantToken);
+        Long after = lastEventId(lastEventId);
         RoomStream s = streams.open(code, me);
-        s.ready(rooms.load(code).rev());
+        long rev = rooms.load(code).rev();
+        if (after != null) {
+            catchUp(s, events.since(code, after, rev));
+        }
+        s.ready(rev);
         return s.emitter();
     }
 

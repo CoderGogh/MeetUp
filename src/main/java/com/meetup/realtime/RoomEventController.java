@@ -20,7 +20,8 @@ class RoomEventController {
 
     @GetMapping("/rooms/{code}/events")
     SseEmitter subscribe(@PathVariable String code,
-            @RequestHeader(value = PARTICIPANT_TOKEN, required = false) String token) {
-        return events.subscribe(code, token);
+            @RequestHeader(value = PARTICIPANT_TOKEN, required = false) String token,
+            @RequestHeader(value = RoomEventService.LAST_EVENT_ID, required = false) String lastEventId) {
+        return events.subscribe(code, token, lastEventId);
     }
 }
