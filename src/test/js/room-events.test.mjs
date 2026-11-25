@@ -86,3 +86,15 @@ test('연결만 되고 ready가 안 오면 실패로 셈 (버퍼링 프록시)',
   await until(() => mode === 'poll');
   c.close();
 });
+
+test('폴링 중 보관 범위 밖이면 resync', async () => {
+  let resynced;
+  const fetchImpl = async (url) => (url.includes('since=')
+    ? json({ roomRev: 9, resync: true, events: [] })
+    : new Response('', { status: 503 }));
+  const c = connectRoomEvents({ code: 'C', token: 't', lastRev: 1, onEvent: () => {},
+    onResync: (r) => { resynced = r; }, maxFailures: 1, pollMs: 10, fetchImpl });
+  await until(() => resynced === 9);
+  c.close();
+  assert.equal(c.rev, 9);
+});
