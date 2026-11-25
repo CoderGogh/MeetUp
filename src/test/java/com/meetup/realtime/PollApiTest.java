@@ -69,4 +69,10 @@ class PollApiTest {
         poll(roomWithTwoJoins(), "abc").andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.fields.since").exists());
     }
+
+    @Test
+    void withoutTokenIsUnauthorized() throws Exception {
+        CreatedRoom r = roomWithTwoJoins();
+        mvc.perform(get("/rooms/" + r.code() + "/events").param("since", "1")).andExpect(status().isUnauthorized());
+    }
 }
