@@ -18,6 +18,34 @@
 - 숫자가 아닌 값은 400 (`details.header`)
 - 재전송이 끝나기 전에 온 실시간 이벤트는 쌓아 뒀다가 `ready` 뒤에 rev 순으로 보낸다. 이미 보낸 rev 이하는 건너뛴다. 그래서 재전송 3·4보다 실시간 5가 먼저 나가 클라이언트가 3·4를 버리는 일이 없다
 
+## 폴링 강등
+
+회사망 프록시처럼 SSE를 막거나 버퍼링하는 환경에서는 폴링으로 내려간다 (RFP 6.8)
+
+`GET /rooms/{code}/events?since={roomRev}` · 헤더 `X-Participant-Token` → 200 `{roomRev, resync, events[]}`
+
+- `since`보다 큰 이벤트를 rev 순으로 준다. 최신이면 빈 목록
+- 보관 범위 밖이면 `resync: true`, 목록은 비움. SSE의 `resync`와 같다
+- `Cache-Control: no-store`. 숫자가 아닌 `since`는 400 (`details.fields.since`)
+
+### 클라이언트 (`/js/room-events.js`)
+
+```js
+import { connectRoomEvents } from '/js/room-events.js';
+
+const events = connectRoomEvents({
+  code, token, lastRev: room.roomRev,
+  onEvent: (e) => render(e),
+  onResync: () => reloadRoom(),
+  onMode: (mode) => showBadge(mode), // 'poll'
+});
+```
+
+- `EventSource`는 토큰 헤더를 못 실어 `fetch` 스트림으로 SSE를 읽는다
+- 끊기면 1초·2초 간격으로 다시 붙고, 3번 연달아 실패하면 3초 주기 폴링으로 바꾼다. 연결은 됐는데 5초 안에 `ready`가 안 오면(버퍼링 프록시) 실패로 센다
+- 401·403·404·410은 재시도하지 않고 `onError`로 알린다
+- 테스트는 `node --test src/test/js/*.test.mjs` (Node 22+). `./gradlew check`가 `jsTest`로 같이 돌린다
+
 ## 이벤트 형식
 
 ```

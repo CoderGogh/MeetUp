@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 /** 방별 최근 3개만 보관할 때 재전송·재조회 안내 */
@@ -89,5 +90,14 @@ class ReplayLimitTest {
                 .header("X-Participant-Token", r.participantToken()).header("Last-Event-ID", "1"))
                 .andExpect(request().asyncStarted()).andReturn().getResponse().getContentAsString();
         assertThat(body).contains("event:resync").contains("\"roomRev\":5").doesNotContain("id:");
+    }
+
+    @Test
+    void pollBeyondRetentionIsResync() throws Exception {
+        CreatedRoom r = roomWithFourJoins();
+        mvc.perform(get("/rooms/" + r.code() + "/events").param("since", "1")
+                .header("X-Participant-Token", r.participantToken()))
+                .andExpect(jsonPath("$.resync").value(true)).andExpect(jsonPath("$.roomRev").value(5))
+                .andExpect(jsonPath("$.events.length()").value(0));
     }
 }
