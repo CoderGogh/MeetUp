@@ -63,3 +63,11 @@
 - `COLLECTING`·`REVIEWING`에서만 입장. 그 외 단계는 409 `INVALID_TRANSITION` + `currentState`
 - 입장하면 `roomRev`가 1 오르고 `participant.joined` 이벤트를 낸다 ([실시간 이벤트](realtime.md))
 - 이후 요청은 `X-Participant-Token`으로 본인을 밝힌다. 별명은 로그에 남기지 않는다
+
+## 내 상태
+
+| 메서드 | 경로 | 헤더 | 응답 |
+|---|---|---|---|
+| GET | `/rooms/{code}/participants/me` | `X-Participant-Token` | 200 `{participantId, nickname, host, originSubmitted, state, roomRev}` |
+
+새로고침·재접속 때 현재 단계와 내 입력값을 되살린다 (FR-21). 투표 항목은 5주차에 붙는다. 토큰이 없거나 틀리면 401, 만료된 방 410
