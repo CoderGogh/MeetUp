@@ -43,6 +43,26 @@ export function connectRoomEvents({
   let controller = null;
   let timer = null;
 
+  // 가진 rev 이하는 버림 (순서가 뒤집혀도 화면이 과거로 안 감)
+  const accept = (event) => {
+    if (event.roomRev <= rev) return;
+    rev = event.roomRev;
+    onEvent(event);
+  };
+
+  // 보관 범위 밖. 호출한 쪽이 전체를 다시 조회
+  const resync = (roomRev) => {
+    rev = Math.max(rev, roomRev);
+    onResync(roomRev);
+  };
+
+  const stop = (status) => {
+    closed = true;
+    onError(status);
+  };
+
+  const headers = (type) => ({ Accept: type, 'X-Participant-Token': token });
+
   return {
     get mode() {
       return mode;
