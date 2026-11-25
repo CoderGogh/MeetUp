@@ -41,9 +41,13 @@ public final class RoomStream {
         }
     }
 
-    boolean send(RoomEvent e) {
+    private boolean write(RoomEvent e) {
         return send(SseEmitter.event().id(String.valueOf(e.roomRev())).name(e.type())
                 .data(e, MediaType.APPLICATION_JSON));
+    }
+
+    boolean send(RoomEvent e) {
+        return write(e);
     }
 
     // 연결 직후 현재 roomRev. ID가 없어 Last-Event-ID를 덮지 않음
