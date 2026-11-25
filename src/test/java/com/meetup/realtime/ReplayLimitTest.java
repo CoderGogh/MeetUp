@@ -5,11 +5,14 @@ import com.meetup.room.CreateRoomRequest;
 import com.meetup.room.CreatedRoom;
 import com.meetup.room.JoinRequest;
 import com.meetup.room.ParticipantService;
+import com.meetup.room.RoomEvent;
 import com.meetup.room.RoomService;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** 방별 최근 3개만 보관할 때 재전송·재조회 안내 */
 @SpringBootTest(properties = "meetup.realtime.retained-events=3")
@@ -30,5 +33,11 @@ class ReplayLimitTest {
             participants.join(r.code(), new JoinRequest("팀원" + i));
         }
         return r;
+    }
+
+    @Test
+    void keepsOnlyRecentEvents() {
+        CreatedRoom r = roomWithFourJoins();
+        assertThat(events.after(r.code(), 0)).extracting(RoomEvent::roomRev).containsExactly(3L, 4L, 5L);
     }
 }
