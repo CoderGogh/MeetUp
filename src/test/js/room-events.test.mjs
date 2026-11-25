@@ -44,3 +44,16 @@ test('가진 rev 이하 이벤트는 버림', async () => {
   assert.deepEqual(got, [3, 4]);
   assert.equal(c.rev, 4);
 });
+
+test('재접속 때 Last-Event-ID로 가진 rev 전송', async () => {
+  let sent;
+  const fetchImpl = async (url, { headers, signal }) => {
+    sent = headers;
+    return sse([ready(5)], { open: true, signal });
+  };
+  const c = connectRoomEvents({ code: 'C', token: 't', lastRev: 5, onEvent: () => {}, fetchImpl });
+  await until(() => sent);
+  c.close();
+  assert.equal(sent['Last-Event-ID'], '5');
+  assert.equal(sent['X-Participant-Token'], 't');
+});
