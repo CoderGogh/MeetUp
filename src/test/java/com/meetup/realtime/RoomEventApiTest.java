@@ -120,4 +120,11 @@ class RoomEventApiTest {
         assertThat(body).contains("id:2").contains("id:3").contains("event:ready");
         assertThat(body.indexOf("id:2")).isLessThan(body.indexOf("id:3"));
     }
+
+    @Test
+    void upToDateReconnectReplaysNothing() throws Exception {
+        CreatedRoom r = room();
+        participants.join(r.code(), new JoinRequest("준호"));
+        assertThat(resume(r, "2").getContentAsString()).doesNotContain("id:").contains("event:ready");
+    }
 }
