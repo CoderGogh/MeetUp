@@ -63,6 +63,20 @@ export function connectRoomEvents({
 
   const headers = (type) => ({ Accept: type, 'X-Participant-Token': token });
 
+  // ready를 받으면 정상 연결로 보고 실패 횟수 초기화
+  const dispatch = ({ event, data }, ready) => {
+    if (!data) return;
+    const body = JSON.parse(data);
+    if (event === 'ready') {
+      ready();
+      if (body.roomRev > rev) resync(body.roomRev);
+    } else if (event === 'resync') {
+      resync(body.roomRev);
+    } else {
+      accept(body);
+    }
+  };
+
   return {
     get mode() {
       return mode;
