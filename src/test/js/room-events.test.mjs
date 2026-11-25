@@ -75,3 +75,14 @@ test('SSE가 연달아 실패하면 폴링으로 강등', async () => {
   assert.equal(calls.filter((u) => !u.includes('since=')).length, 3);
   assert.ok(calls.includes('/rooms/C/events?since=1'));
 });
+
+test('연결만 되고 ready가 안 오면 실패로 셈 (버퍼링 프록시)', async () => {
+  let mode;
+  const fetchImpl = async (url, { signal }) => (url.includes('since=')
+    ? json({ roomRev: 1, resync: false, events: [] })
+    : sse([], { open: true, signal }));
+  const c = connectRoomEvents({ code: 'C', token: 't', lastRev: 1, onEvent: () => {},
+    onMode: (m) => { mode = m; }, maxFailures: 2, retryMs: 1, readyMs: 20, pollMs: 10, fetchImpl });
+  await until(() => mode === 'poll');
+  c.close();
+});
