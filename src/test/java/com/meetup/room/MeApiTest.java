@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +24,8 @@ class MeApiTest {
     RoomService rooms;
     @Autowired
     ParticipantService participants;
+    @Autowired
+    StringRedisTemplate redis;
 
     @Test
     void returnsMyInputAndCurrentStage() throws Exception {
@@ -39,5 +42,13 @@ class MeApiTest {
     void noTokenIsUnauthorized() throws Exception {
         String code = RoomFixture.room(rooms, 5).code();
         mvc.perform(get("/rooms/" + code + "/participants/me")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void expiredRoomIsGone() throws Exception {
+        CreatedRoom r = RoomFixture.room(rooms, 5);
+        RoomFixture.expire(redis, r.code());
+        mvc.perform(get("/rooms/" + r.code() + "/participants/me").header("X-Participant-Token", r.participantToken()))
+                .andExpect(status().isGone());
     }
 }
