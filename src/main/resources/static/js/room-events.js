@@ -133,6 +133,22 @@ export function connectRoomEvents({
     tick();
   }
 
+  // 끊길 때마다 다시 붙고, maxFailures번 연달아 실패하면 폴링
+  async function run() {
+    while (!closed) {
+      try {
+        await stream();
+      } catch {
+        // 재시도로
+      }
+      if (closed) return;
+      failures += 1;
+      if (failures >= maxFailures) return startPolling();
+      await wait(retryMs * failures);
+    }
+  }
+
+  run();
   return {
     get mode() {
       return mode;
