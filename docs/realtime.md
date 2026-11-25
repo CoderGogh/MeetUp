@@ -16,7 +16,7 @@
 - 그 뒤 이벤트를 순서대로 다시 보내고 `ready`를 보낸다
 - 놓친 구간이 보관 범위를 넘으면 이벤트 대신 `resync`(`roomRev`)를 보낸다. 클라이언트는 `GET /rooms/{code}`·`GET /rooms/{code}/participants/me`로 전체를 다시 맞춘다
 - 숫자가 아닌 값은 400 (`details.header`)
-- 재전송과 실시간 전달이 겹친 이벤트는 한 번만 보낸다. 그래도 같은 ID가 두 번 오면 클라이언트가 버린다
+- 재전송이 끝나기 전에 온 실시간 이벤트는 쌓아 뒀다가 `ready` 뒤에 rev 순으로 보낸다. 이미 보낸 rev 이하는 건너뛴다. 그래서 재전송 3·4보다 실시간 5가 먼저 나가 클라이언트가 3·4를 버리는 일이 없다
 
 ## 이벤트 형식
 
@@ -48,3 +48,25 @@ data:{"code":"…","roomRev":2,"type":"participant.joined","payload":{"nickname"
 - 방별 최근 200개(`meetup.realtime.retained-events`)만 남긴다. 방 키와 같은 시각에 만료
 - 보관과 전파는 같은 리스너에서 보관 → 전파 순. 보관이 실패해도 전파는 하고, 그 구간은 재접속 때 `resync`로 메운다
 - 끊김 검증은 `ReconnectTest`. 실제 연결을 끊고 그 사이 입장·전이를 낸 뒤 재접속해 다 받는지, 최종 `roomRev`·단계·인원이 같은지 본다 (NFR-07)
+
+## 다중 인스턴스
+
+SSE 연결은 붙은 인스턴스 메모리에만 있다. 인스턴스가 둘이면 A에서 난 이벤트를 B에 붙은 참여자가 못 받는다. 그래서 이벤트를 Redis 채널 `meetup:room-events`로 발행하고, 모든 인스턴스가 구독해 자기 연결에 나눠 준다
+
+- `meetup.realtime.broadcast` (`REALTIME_BROADCAST`): `redis`(기본) · `local`(단일 인스턴스, 채널 구독 안 함)
+- 자기 인스턴스 구독자도 채널을 거쳐 받는다. 경로가 하나라 같은 이벤트가 두 번 가지 않는다
+- 이벤트 보관은 Redis라 다른 인스턴스로 재접속해도 끊긴 구간을 받는다
+- 발행이 실패하면 이 인스턴스 구독자에게라도 보내고 경고 로그를 남긴다. 나머지는 재접속 때 메운다
+
+### 결정 근거 (RFP 8.7 보류 항목 2)
+
+같은 Redis를 쓰는 앱 두 개를 띄워 비교했다
+
+| 방식 | 다른 인스턴스 구독자 | 인스턴스 간 지연 | 테스트 |
+|---|---|---|---|
+| `local` | 못 받음 | | `LocalBroadcastLimitTest` |
+| `redis` | 받음, 중복 없음 | 3~9ms (로컬 Redis, 4회) | `MultiInstanceTest` |
+
+방 상태가 이미 Redis에 있어 새 인프라가 늘지 않고, 지연도 1초 기준(NFR-06)에 비해 무시할 수준이라 Redis Pub/Sub을 기본으로 둔다. Pub/Sub은 받는 쪽이 끊겨 있으면 메시지가 사라지지만, 그 구간은 이벤트 보관과 `Last-Event-ID` 재전송이 메운다
+
+직접 확인: `docker compose --profile scale up -d` 후 8080·8081에 각각 구독을 붙이고 한쪽에 입장 요청

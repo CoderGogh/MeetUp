@@ -13,11 +13,11 @@ class RoomEventRelay {
     private static final Logger log = LoggerFactory.getLogger(RoomEventRelay.class);
 
     private final RoomEventLog events;
-    private final RoomStreams streams;
+    private final EventBroadcaster broadcaster;
 
-    RoomEventRelay(RoomEventLog events, RoomStreams streams) {
+    RoomEventRelay(RoomEventLog events, EventBroadcaster broadcaster) {
         this.events = events;
-        this.streams = streams;
+        this.broadcaster = broadcaster;
     }
 
     // 보관 실패해도 전파는 함. 재접속 때 재조회로 메움
@@ -32,6 +32,6 @@ class RoomEventRelay {
     @EventListener
     void on(RoomEvent e) {
         store(e);
-        streams.deliver(e);
+        broadcaster.publish(e);
     }
 }
