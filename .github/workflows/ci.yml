@@ -38,6 +38,10 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+      # 웹 클라이언트 테스트 (jsTest)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: check
         run: ./gradlew check --no-daemon
       - name: 테스트 리포트
