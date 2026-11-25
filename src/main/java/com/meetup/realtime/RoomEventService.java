@@ -15,10 +15,12 @@ public class RoomEventService {
 
     private final RoomService rooms;
     private final RoomStreams streams;
+    private final RoomEventLog events;
 
-    public RoomEventService(RoomService rooms, RoomStreams streams) {
+    public RoomEventService(RoomService rooms, RoomStreams streams, RoomEventLog events) {
         this.rooms = rooms;
         this.streams = streams;
+        this.events = events;
     }
 
     // 없으면 null, 숫자가 아니면 400
@@ -41,5 +43,13 @@ public class RoomEventService {
         RoomStream s = streams.open(code, me);
         s.ready(rooms.load(code).rev());
         return s.emitter();
+    }
+
+    private static void catchUp(RoomStream s, Replay r) {
+        if (r.resync()) {
+            s.resync(r.roomRev());
+        } else {
+            s.replay(r.events());
+        }
     }
 }
