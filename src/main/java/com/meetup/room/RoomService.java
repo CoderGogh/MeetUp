@@ -114,4 +114,12 @@ public class RoomService {
                 room.expiresAt(), inviteUrl(code), me,
                 rooms.participants(code).stream().map(RoomView.Member::of).toList());
     }
+
+    // 토큰은 맞는데 참여자가 없으면 키 만료 경계 → 401
+    public MeView me(String code, String participantToken) {
+        Room room = load(code);
+        String id = authenticate(code, participantToken);
+        Participant p = rooms.participant(code, id).orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
+        return MeView.of(p, room.state(), room.rev());
+    }
 }
