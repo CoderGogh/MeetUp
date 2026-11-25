@@ -61,5 +61,5 @@
 - 정원·별명 중복·단계 검사와 등록을 Lua 스크립트 하나로 처리한다. 동시에 몰려도 정원을 넘지 않고, 같은 별명은 한 명만 들어간다
 - 별명 중복은 대소문자 무시. 같은 사람이 두 기기로 들어오는 것도 별명 중복으로 막는다
 - `COLLECTING`·`REVIEWING`에서만 입장. 그 외 단계는 409 `INVALID_TRANSITION` + `currentState`
-- 입장하면 `roomRev`가 1 오르고 `participant.joined` 이벤트를 낸다 (SSE 전파는 3주차)
+- 입장하면 `roomRev`가 1 오르고 `participant.joined` 이벤트를 낸다 ([실시간 이벤트](realtime.md))
 - 이후 요청은 `X-Participant-Token`으로 본인을 밝힌다. 별명은 로그에 남기지 않는다

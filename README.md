@@ -16,6 +16,7 @@
 - [이동시간 행렬 적재](docs/loader.md)
 - [API 공통 규칙](docs/api.md)
 - [방 상태 전이](docs/state-machine.md)
+- [실시간 이벤트](docs/realtime.md)
 - [형상 관리 규칙](CONTRIBUTING.md)
 ## 실행
 
