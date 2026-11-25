@@ -1,5 +1,7 @@
 package com.meetup.realtime;
 
+import com.meetup.place.Theme;
+import com.meetup.room.CreateRoomRequest;
 import com.meetup.room.CreatedRoom;
 import com.meetup.room.JoinRequest;
 import com.meetup.room.ParticipantService;
@@ -7,6 +9,7 @@ import com.meetup.room.RoomService;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -18,6 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class DeliveryLatencyTest {
+
+    private static final Duration LIMIT = Duration.ofSeconds(1);
 
     @LocalServerPort
     int port;
@@ -44,5 +49,18 @@ class DeliveryLatencyTest {
             clients.add(c);
         }
         return clients;
+    }
+
+    @Test
+    void joinReachesEverySubscriberWithinOneSecond() throws Exception {
+        CreatedRoom r = rooms.create(new CreateRoomRequest(Theme.CASUAL, 10, "방장"));
+        List<SseClient> clients = connect(r.code(), members(r, 4));
+        long start = System.nanoTime();
+        participants.join(r.code(), new JoinRequest("늦은사람"));
+        for (SseClient c : clients) {
+            assertThat(c.await("\"count\":6", LIMIT)).isNotNull();
+            c.close();
+        }
+        assertThat(Duration.ofNanos(System.nanoTime() - start)).isLessThan(LIMIT);
     }
 }
