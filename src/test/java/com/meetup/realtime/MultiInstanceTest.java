@@ -75,4 +75,14 @@ class MultiInstanceTest {
             assertThat(onA.await("id:2", Duration.ofMillis(300))).isNull();
         }
     }
+
+    @Test
+    void reconnectToOtherInstanceReplaysMissed() throws Exception {
+        CreatedRoom r = room();
+        new SseClient(TwoInstances.port(other), r.code(), r.participantToken()).close();
+        participants.join(r.code(), new JoinRequest("준호"));
+        try (SseClient onB = new SseClient(TwoInstances.port(other), r.code(), r.participantToken(), "1")) {
+            assertThat(onB.await("id:2", LIMIT)).isNotNull();
+        }
+    }
 }
