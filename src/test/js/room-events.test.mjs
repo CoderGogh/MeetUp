@@ -98,3 +98,16 @@ test('폴링 중 보관 범위 밖이면 resync', async () => {
   c.close();
   assert.equal(c.rev, 9);
 });
+
+test('401이면 재시도·폴링 없이 멈춤', async () => {
+  let calls = 0;
+  let error;
+  const fetchImpl = async () => {
+    calls += 1;
+    return json({ code: 'UNAUTHORIZED' }, 401);
+  };
+  connectRoomEvents({ code: 'C', token: 'x', onEvent: () => {}, onError: (s) => { error = s; }, retryMs: 1, fetchImpl });
+  await until(() => error === 401);
+  await new Promise((r) => setTimeout(r, 30));
+  assert.equal(calls, 1);
+});
