@@ -9,12 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -36,6 +39,11 @@ class RoomEventApiTest {
                 .header("X-Participant-Token", token == null ? "" : token));
     }
 
+    MockHttpServletResponse stream(CreatedRoom r) throws Exception {
+        return subscribe(r.code(), r.participantToken()).andExpect(request().asyncStarted()).andReturn()
+                .getResponse();
+    }
+
     @Test
     void subscribeWithoutTokenIsUnauthorized() throws Exception {
         subscribe(room().code(), null).andExpect(status().isUnauthorized())
@@ -46,5 +54,11 @@ class RoomEventApiTest {
     void unknownRoomIsNotFound() throws Exception {
         subscribe("ABCDEFGHJKMN", "x").andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ROOM_NOT_FOUND"));
+    }
+
+    @Test
+    void subscribeSendsReadyWithRoomRev() throws Exception {
+        CreatedRoom r = room();
+        assertThat(stream(r).getContentAsString()).contains("event:ready").contains("\"roomRev\":1");
     }
 }
