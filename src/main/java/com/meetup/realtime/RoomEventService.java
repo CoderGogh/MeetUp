@@ -68,4 +68,13 @@ public class RoomEventService {
             s.replay(r.events());
         }
     }
+
+    // since 이후 이벤트 (SSE 차단 시 폴링, RFP 6.8). 보관 범위 밖이면 resync
+    public Replay poll(String code, String participantToken, String since) {
+        long rev = rooms.load(code).rev();
+        rooms.authenticate(code, participantToken);
+        long after = number(since, () -> new ApiException(ErrorCode.INVALID_REQUEST, "since는 숫자입니다",
+                Map.of("fields", Map.of("since", "숫자"))));
+        return events.since(code, after, rev);
+    }
 }
