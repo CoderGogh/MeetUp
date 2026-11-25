@@ -10,7 +10,7 @@ public record RealtimeProperties(
         @DefaultValue("PT30M") Duration emitterTimeout,
         @DefaultValue("PT20S") Duration heartbeat,
         @DefaultValue("200") int retainedEvents,
-        @DefaultValue("local") Broadcast broadcast) {
+        @DefaultValue("redis") Broadcast broadcast) {
 
     /** 전파 방식. local은 이 인스턴스 구독자에게만, redis는 Pub/Sub으로 전 인스턴스에 */
     public enum Broadcast {

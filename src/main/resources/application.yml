@@ -35,4 +35,4 @@ meetup:
     emitter-timeout: PT30M
     heartbeat: PT20S
     retained-events: 200
-    broadcast: ${REALTIME_BROADCAST:local}
+    broadcast: ${REALTIME_BROADCAST:redis}
