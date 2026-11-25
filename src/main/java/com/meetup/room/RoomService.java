@@ -40,7 +40,7 @@ public class RoomService {
     }
 
     // 없는 방 404, 만료된 방 410
-    Room load(String code) {
+    public Room load(String code) {
         Room room = find(code);
         if (room.stateAt(clock.instant()) == RoomState.EXPIRED) {
             throw new ApiException(ErrorCode.ROOM_EXPIRED, Map.of("expiredAt", room.expiresAt().toString()));
@@ -65,7 +65,7 @@ public class RoomService {
     }
 
     // 참여자 토큰 → 참여자 ID. 없거나 틀리면 401
-    String authenticate(String code, String participantToken) {
+    public String authenticate(String code, String participantToken) {
         if (participantToken == null || participantToken.isBlank()) {
             throw new ApiException(ErrorCode.UNAUTHORIZED);
         }
