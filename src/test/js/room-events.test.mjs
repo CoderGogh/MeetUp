@@ -34,3 +34,13 @@ test('SSE 블록 파싱 (주석 무시)', () => {
     { id: '2', event: 'state.changed', data: '{"roomRev":2}' });
   assert.equal(parseSseBlock(':ping').data, '');
 });
+
+test('가진 rev 이하 이벤트는 버림', async () => {
+  const got = [];
+  const fetchImpl = async (url, { signal }) => sse([ready(1), event(3), event(2), event(4)], { open: true, signal });
+  const c = connectRoomEvents({ code: 'C', token: 't', lastRev: 1, onEvent: (e) => got.push(e.roomRev), fetchImpl });
+  await until(() => got.length === 2);
+  c.close();
+  assert.deepEqual(got, [3, 4]);
+  assert.equal(c.rev, 4);
+});
