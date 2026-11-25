@@ -1,0 +1,34 @@
+package com.meetup.realtime;
+
+import com.meetup.place.Theme;
+import com.meetup.room.CreateRoomRequest;
+import com.meetup.room.CreatedRoom;
+import com.meetup.room.JoinRequest;
+import com.meetup.room.ParticipantService;
+import com.meetup.room.RoomService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+
+/** 방별 최근 3개만 보관할 때 재전송·재조회 안내 */
+@SpringBootTest(properties = "meetup.realtime.retained-events=3")
+@ActiveProfiles("test")
+class ReplayLimitTest {
+
+    @Autowired
+    RoomService rooms;
+    @Autowired
+    ParticipantService participants;
+    @Autowired
+    RoomEventLog events;
+
+    // 방장 + 4명 입장 → rev 2~5 이벤트
+    CreatedRoom roomWithFourJoins() {
+        CreatedRoom r = rooms.create(new CreateRoomRequest(Theme.CASUAL, 10, "방장"));
+        for (int i = 1; i <= 4; i++) {
+            participants.join(r.code(), new JoinRequest("팀원" + i));
+        }
+        return r;
+    }
+}
