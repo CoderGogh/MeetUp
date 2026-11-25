@@ -96,6 +96,10 @@ public class RoomRepository {
                 .sorted(Comparator.comparingLong(Participant::joinedAt)).toList();
     }
 
+    public Optional<Participant> participant(String code, String id) {
+        return Optional.ofNullable(redis.opsForHash().get(RoomKeys.participants(code), id)).map(this::read);
+    }
+
     public Optional<String> participantIdByToken(String code, String tokenHash) {
         return Optional.ofNullable((String) redis.opsForHash().get(RoomKeys.tokens(code), tokenHash));
     }
