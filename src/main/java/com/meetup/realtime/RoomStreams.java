@@ -36,6 +36,15 @@ public class RoomStreams {
         });
     }
 
+    // 방 구독자 전원에게. 보내지 못한 연결은 정리
+    public void deliver(RoomEvent e) {
+        for (RoomStream s : rooms.getOrDefault(e.code(), Set.of())) {
+            if (!s.send(e)) {
+                remove(s);
+            }
+        }
+    }
+
     public int count(String code) {
         return rooms.getOrDefault(code, Set.of()).size();
     }
