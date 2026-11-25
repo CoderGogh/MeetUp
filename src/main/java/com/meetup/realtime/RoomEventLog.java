@@ -56,4 +56,16 @@ public class RoomEventLog {
         Set<String> raw = redis.opsForZSet().rangeByScore(RoomKeys.events(code), after + 1, Double.MAX_VALUE);
         return raw == null ? List.of() : raw.stream().map(this::read).toList();
     }
+
+    // 바로 다음 rev부터 이어지지 않으면 보관 범위 밖 → 재조회
+    public Replay since(String code, long after, long currentRev) {
+        if (after == currentRev) {
+            return Replay.none(currentRev);
+        }
+        List<RoomEvent> events = after < currentRev ? after(code, after) : List.of();
+        if (events.isEmpty() || events.get(0).roomRev() != after + 1) {
+            return Replay.resync(currentRev);
+        }
+        return new Replay(events, false, currentRev);
+    }
 }
