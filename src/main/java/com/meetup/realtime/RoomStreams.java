@@ -4,6 +4,8 @@ import com.meetup.room.RoomEvent;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -54,6 +56,13 @@ public class RoomStreams {
                 remove(s);
             }
         }));
+    }
+
+    // 종료 시작 때 먼저 닫음. 열린 연결이 graceful shutdown을 붙잡지 않게
+    @EventListener(ContextClosedEvent.class)
+    void closeAll() {
+        rooms.values().forEach(set -> set.forEach(s -> s.emitter().complete()));
+        rooms.clear();
     }
 
     public int count(String code) {

@@ -90,10 +90,14 @@ public class RoomRepository {
                 Instant.ofEpochMilli(Long.parseLong((String) h.get("expiresAt"))), (String) h.get("hostTokenHash")));
     }
 
-    // 입장 순
+    // 입장 순. 같은 ms면 방장 먼저
     public List<Participant> participants(String code) {
         return redis.opsForHash().values(RoomKeys.participants(code)).stream().map(this::read)
-                .sorted(Comparator.comparingLong(Participant::joinedAt)).toList();
+                .sorted(Comparator.comparingLong(Participant::joinedAt).thenComparing(p -> !p.host())).toList();
+    }
+
+    public Optional<Participant> participant(String code, String id) {
+        return Optional.ofNullable(redis.opsForHash().get(RoomKeys.participants(code), id)).map(this::read);
     }
 
     public Optional<String> participantIdByToken(String code, String tokenHash) {
